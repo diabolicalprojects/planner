@@ -908,11 +908,66 @@
 .tarea {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 6px 8px;
   margin: 0 -8px;
   border-radius: var(--radio-xs);
-  transition: background-color 140ms var(--curva);
+  background: transparent;
+  transition:
+    background-color 140ms var(--curva),
+    box-shadow 140ms var(--curva);
+}
+
+/* La fila que estás moviendo se levanta del bloque, como la tarjeta del tablero. */
+.tarea--arrastrando {
+  background: var(--tarjeta);
+  box-shadow: var(--sombra);
+  position: relative;
+  z-index: 2;
+}
+
+/* El asa es el único sitio por donde se arrastra: así el campo de texto sigue
+   siendo un campo de texto. */
+.tarea__asa {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--tinta-suave);
+  cursor: grab;
+  touch-action: none;
+  transition:
+    background-color 140ms var(--curva),
+    color 140ms var(--curva);
+}
+
+.tarea__asa:hover {
+  background: var(--hundido-fuerte);
+  color: var(--tinta);
+}
+
+.tarea--arrastrando .tarea__asa {
+  cursor: grabbing;
+  color: var(--tinta);
+}
+
+/* El número es la prioridad. Se lee de un vistazo y no compite con el texto. */
+.tarea__puesto {
+  flex: none;
+  min-width: 16px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--tinta-suave);
+  text-align: right;
+}
+
+.tarea--arrastrando .tarea__puesto {
+  color: var(--tinta);
 }
 
 @media (hover: hover) and (pointer: fine) {

@@ -24,6 +24,9 @@ los borra de un clic cuando metas los tuyos.
   *Producto propio* es lo que lanza la agencia por su cuenta: no tiene cliente, no se cobra,
   su fecha es la de **lanzamiento** y su importe es **inversión**. El segmentado de arriba
   filtra entre los dos, y con «Producto propio» puesto la última columna se llama *Lanzado*.
+- **Las tareas van en orden de prioridad.** Se arrastran por el asa de la izquierda o se mueven
+  con `Alt` y las flechas. El orden que ves es el que se guarda: la base lo conserva en la
+  columna `orden` de la tabla `tareas`.
 - **Las tareas llevan responsable.** Un disco con las iniciales en cada tarea, y los discos
   apilados en la tarjeta del tablero para ver de un vistazo quién anda en qué. Es texto libre
   con autocompletado de la gente que ya aparece: aquí no hay entidad «equipo».
@@ -44,6 +47,7 @@ los borra de un clic cuando metas los tuyos.
 | `Esc` | Volver al tablero |
 | `Intro` | Abrir el proyecto enfocado |
 | `Alt + ← →` | Mover el proyecto de columna |
+| `Alt + ↑ ↓` | Subir o bajar la tarea enfocada |
 
 ## Dónde viven los datos
 

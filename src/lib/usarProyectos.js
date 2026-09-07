@@ -119,6 +119,25 @@ export function usarProyectos() {
     )
   }, [])
 
+  /**
+   * Cambia una tarea de sitio dentro de su proyecto. El orden del array ES el
+   * orden de prioridad: la base lo guarda en la columna `orden` y lo devuelve
+   * igual, así que no hace falta ningún campo extra.
+   */
+  const moverTarea = useCallback((id, desde, hasta) => {
+    setProyectos((lista) =>
+      lista.map((p) => {
+        if (p.id !== id) return p
+        if (desde === hasta || desde < 0 || hasta < 0) return p
+        if (desde >= p.tareas.length || hasta >= p.tareas.length) return p
+        const tareas = [...p.tareas]
+        const [movida] = tareas.splice(desde, 1)
+        tareas.splice(hasta, 0, movida)
+        return { ...p, tareas, actualizado: new Date().toISOString() }
+      }),
+    )
+  }, [])
+
   const borrarTarea = useCallback((id, tareaId) => {
     setProyectos((lista) =>
       lista.map((p) => (p.id === id ? { ...p, tareas: p.tareas.filter((t) => t.id !== tareaId) } : p)),
@@ -138,6 +157,7 @@ export function usarProyectos() {
     reemplazar,
     anadirTarea,
     cambiarTarea,
+    moverTarea,
     borrarTarea,
     cargarEjemplo: () => setProyectos(proyectosDeEjemplo()),
     vaciar: () => setProyectos([]),

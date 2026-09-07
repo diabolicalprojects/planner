@@ -8,6 +8,7 @@ const ATAJOS = [
   ['Esc', 'Volver al tablero'],
   ['Intro', 'Abrir el proyecto enfocado'],
   ['Alt + ← →', 'Mover el proyecto de columna'],
+  ['Alt + ↑ ↓', 'Subir o bajar la tarea enfocada'],
 ]
 
 export default function Ayuda({ tipo, volver }) {
@@ -17,9 +18,9 @@ export default function Ayuda({ tipo, volver }) {
         <div className="pagina-texto">
           <h2 className="titulo-seccion">Atajos de teclado</h2>
           <p>
-            El tablero se puede usar entero sin ratón. Enfoca un proyecto con el tabulador y muévelo de
-            columna con Alt y las flechas: hace lo mismo que arrastrarlo, y el cambio se anuncia para
-            lectores de pantalla.
+            Todo se puede hacer sin ratón. Enfoca un proyecto con el tabulador y muévelo de columna
+            con Alt y las flechas; dentro de un proyecto, enfoca el asa de una tarea y súbela o bájala
+            igual. Hace lo mismo que arrastrar, y cada cambio se anuncia para lectores de pantalla.
           </p>
           <dl className="atajos">
             {ATAJOS.map(([tecla, que]) => (

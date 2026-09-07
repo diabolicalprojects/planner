@@ -1,15 +1,7 @@
 import { useEffect, useState } from 'react'
-import {
-  ArrowLeft,
-  ArrowSquareOut,
-  CopySimple,
-  Plus,
-  RocketLaunch,
-  TrashSimple,
-  X,
-} from '@phosphor-icons/react'
-import { Avance, Boton, Campo, CampoDinero, Casilla, Chip, Tarjeta } from './base.jsx'
-import Responsable from './Responsable.jsx'
+import { ArrowLeft, ArrowSquareOut, CopySimple, RocketLaunch, TrashSimple } from '@phosphor-icons/react'
+import { Boton, Campo, CampoDinero, Casilla, Chip, Tarjeta } from './base.jsx'
+import Tareas from './Tareas.jsx'
 import {
   ESTADOS,
   TIPOS,
@@ -31,7 +23,8 @@ const ACTUALIZADA = new Intl.DateTimeFormat('es-MX', { day: '2-digit', month: 's
  * vivos y lo que escribes ya está guardado.
  */
 export default function Detalle({ proyecto, acciones, volver, gente = [] }) {
-  const { actualizar, borrar, duplicar, anadirTarea, cambiarTarea, borrarTarea } = acciones
+  const { actualizar, borrar, duplicar, anadirTarea, cambiarTarea, moverTarea, borrarTarea } =
+    acciones
   const [confirmando, setConfirmando] = useState(false)
   const [tareaNueva, setTareaNueva] = useState('')
   const [etiquetasTexto, setEtiquetasTexto] = useState(proyecto.etiquetas.join(', '))
@@ -261,84 +254,17 @@ export default function Detalle({ proyecto, acciones, volver, gente = [] }) {
         </div>
 
         <div className="detalle__columna">
-          <div className="bloque">
-            <div className="bloque__cabecera">
-              <span className="etiqueta-campo" id="rotulo-tareas">
-                Tareas
-              </span>
-              {progreso ? (
-                <span className="apoyo cifra">
-                  {progreso.hechas} de {progreso.total}
-                </span>
-              ) : null}
-            </div>
-
-            {progreso ? <Avance fraccion={progreso.fraccion} etiqueta="Avance del proyecto" /> : null}
-
-            <datalist id="gente-de-la-casa">
-              {gente.map((nombre) => (
-                <option value={nombre} key={nombre} />
-              ))}
-            </datalist>
-
-            {proyecto.tareas.length > 0 ? (
-              <ul className="tareas" aria-labelledby="rotulo-tareas" style={{ marginTop: 'var(--e3)' }}>
-                {proyecto.tareas.map((tarea) => (
-                  <li className="tarea" key={tarea.id}>
-                    <Casilla
-                      checked={tarea.hecha}
-                      onChange={(e) => cambiarTarea(proyecto.id, tarea.id, { hecha: e.target.checked })}
-                      aria-label={`Marcar ${tarea.texto}`}
-                    />
-                    <input
-                      className={`tarea__texto ${tarea.hecha ? 'tarea__texto--hecha' : ''}`.trim()}
-                      value={tarea.texto}
-                      onChange={(e) => cambiarTarea(proyecto.id, tarea.id, { texto: e.target.value })}
-                      aria-label="Texto de la tarea"
-                    />
-                    <Responsable
-                      valor={tarea.responsable}
-                      listaId="gente-de-la-casa"
-                      alCambiar={(nombre) => cambiarTarea(proyecto.id, tarea.id, { responsable: nombre })}
-                    />
-                    <button
-                      type="button"
-                      className="tarea__quitar"
-                      onClick={() => borrarTarea(proyecto.id, tarea.id)}
-                      aria-label={`Quitar la tarea ${tarea.texto}`}
-                    >
-                      <X size={13} weight="bold" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="pista" style={{ marginTop: 'var(--e2)' }}>
-                Sin tareas. El avance del proyecto sale de aquí.
-              </p>
-            )}
-
-            <form
-              className="tarea-alta"
-              onSubmit={(e) => {
-                e.preventDefault()
-                anadirTarea(proyecto.id, tareaNueva)
-                setTareaNueva('')
-              }}
-            >
-              <input
-                className="campo"
-                value={tareaNueva}
-                onChange={(e) => setTareaNueva(e.target.value)}
-                placeholder="Añadir una tarea"
-                aria-label="Añadir una tarea"
-                maxLength={160}
-              />
-              <Boton variante="principal" type="submit" disabled={!tareaNueva.trim()} aria-label="Añadir tarea">
-                <Plus size={16} weight="bold" />
-              </Boton>
-            </form>
-          </div>
+          <Tareas
+            proyecto={proyecto}
+            progreso={progreso}
+            gente={gente}
+            tareaNueva={tareaNueva}
+            setTareaNueva={setTareaNueva}
+            anadirTarea={anadirTarea}
+            cambiarTarea={cambiarTarea}
+            moverTarea={moverTarea}
+            borrarTarea={borrarTarea}
+          />
 
           <Campo
             id="campo-notas"
