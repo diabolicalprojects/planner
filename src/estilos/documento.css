@@ -402,6 +402,7 @@
 }
 
 .previsualizacion__lienzo {
+  position: relative;
   overflow: hidden;
   border-radius: var(--radio-m);
 }
@@ -409,6 +410,7 @@
 .previsualizacion__escala {
   transform-origin: top left;
 }
+
 
 /* ===========================================================================
    Impresión: fuera todo lo que no sea la hoja.

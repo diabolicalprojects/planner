@@ -1,7 +1,17 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { ArrowLeft, CopySimple, DotsSixVertical, Plus, Printer, TrashSimple, X } from '@phosphor-icons/react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import {
+  ArrowLeft,
+  Check,
+  CopySimple,
+  DotsSixVertical,
+  DownloadSimple,
+  Plus,
+  TrashSimple,
+  X,
+} from '@phosphor-icons/react'
 import { Boton, Campo, CampoDinero, Tarjeta } from './base.jsx'
 import Documento from './Documento.jsx'
+import { descargar } from '../lib/descargar.js'
 import {
   ESTADOS_COT,
   MARCAS,
@@ -12,16 +22,32 @@ import {
 } from '../lib/modelo.js'
 
 const ANCHO_A4 = 794 // 210 mm a 96 ppp
+const ALTO_A4 = 1123 // 297 mm a 96 ppp
 
 /** Editor de la cotización, con la hoja al lado actualizándose mientras escribes. */
 export default function Cotizacion({ cot, proyectos, acciones, volver }) {
   const { actualizarCotizacion, borrarCotizacion, duplicarCotizacion } = acciones
   const [confirmando, setConfirmando] = useState(false)
   const [escala, setEscala] = useState(0.5)
+  // 'quieto' | 'generando' | 'listo' | 'falla'
+  const [descarga, setDescarga] = useState('quieto')
+  const [altoHoja, setAltoHoja] = useState(ALTO_A4)
+  // Sólo se sabe de verdad cuando el PDF existe; hasta entonces no se dice.
+  const [paginas, setPaginas] = useState(null)
   const lienzo = useRef(null)
-  const hoja = useRef(null)
+  const escenario = useRef(null)
+  const vivo = useRef(true)
 
   useEffect(() => setConfirmando(false), [cot.id])
+  // La cuenta caduca en cuanto se toca el documento.
+  useEffect(() => setPaginas(null), [cot])
+
+  useEffect(() => {
+    vivo.current = true
+    return () => {
+      vivo.current = false
+    }
+  }, [])
 
   // La hoja mide 210 mm de verdad; en pantalla se encoge para caber sin que
   // cambie ni una medida del documento.
@@ -36,8 +62,45 @@ export default function Cotizacion({ cot, proyectos, acciones, volver }) {
     return () => observador.disconnect()
   }, [])
 
+  // El mirador tiene que enseñar la hoja entera. Con la altura fijada a una
+  // página, lo que se salía quedaba recortado y no se descubría hasta abrir el
+  // PDF, que ya es tarde.
+  const medirAlto = useCallback(() => {
+    const hoja = escenario.current?.firstElementChild
+    if (hoja) setAltoHoja(hoja.offsetHeight)
+  }, [])
+
+  useLayoutEffect(medirAlto, [medirAlto, cot])
+
+  // La tipografía llega después del primer pintado y mueve los renglones.
+  useEffect(() => {
+    document.fonts?.ready.then(medirAlto)
+  }, [medirAlto])
+
   const cambiar = (cambios) => actualizarCotizacion(cot.id, cambios)
   const t = totalesCotizacion(cot)
+
+  /**
+   * El PDF se arma aquí mismo, en el navegador: sale vectorial, con el texto
+   * seleccionable y la tipografía dentro del archivo. La librería que lo hace
+   * pesa más que toda la aplicación, así que no se carga hasta que alguien
+   * pulsa el botón; quien sólo entra a mirar no la paga.
+   */
+  const descargarPdf = useCallback(async () => {
+    setDescarga('generando')
+    try {
+      const { generarPdf, nombreArchivo } = await import('../lib/documentoPdf.jsx')
+      const { blob, paginas: cuantas } = await generarPdf(cot)
+      descargar(blob, nombreArchivo(cot))
+      if (!vivo.current) return
+      setPaginas(cuantas)
+      setDescarga('listo')
+      setTimeout(() => vivo.current && setDescarga('quieto'), 2400)
+    } catch (error) {
+      console.error('No se pudo armar el PDF', error)
+      if (vivo.current) setDescarga('falla')
+    }
+  }, [cot])
 
   /* --- Componentes ------------------------------------------------------- */
 
@@ -447,20 +510,44 @@ export default function Cotizacion({ cot, proyectos, acciones, volver }) {
 
       <div className="previsualizacion">
         <div className="previsualizacion__barra">
-          <span className="rotulo">Así se imprime</span>
-          <Boton variante="principal" tamano="pequeno" onClick={() => window.print()}>
-            <Printer size={15} weight="bold" /> Exportar PDF
+          <span className="rotulo">
+            {descarga === 'falla'
+              ? 'No se pudo generar el archivo'
+              : paginas
+                ? `Así queda · ${paginas} ${paginas === 1 ? 'página' : 'páginas'}`
+                : 'Así queda el PDF'}
+          </span>
+          <Boton
+            variante="principal"
+            tamano="pequeno"
+            onClick={descargarPdf}
+            disabled={descarga === 'generando'}
+            aria-busy={descarga === 'generando'}
+          >
+            {descarga === 'generando' ? (
+              <>
+                <span className="girando" aria-hidden="true" /> Generando…
+              </>
+            ) : descarga === 'listo' ? (
+              <>
+                <Check size={15} weight="bold" /> Descargado
+              </>
+            ) : (
+              <>
+                <DownloadSimple size={15} weight="bold" /> Descargar PDF
+              </>
+            )}
           </Boton>
         </div>
 
         <div
           className="previsualizacion__lienzo"
           ref={lienzo}
-          style={{ height: escala * 1123 }}
+          style={{ height: escala * altoHoja }}
         >
           <div
             className="previsualizacion__escala"
-            ref={hoja}
+            ref={escenario}
             style={{ transform: `scale(${escala})`, width: ANCHO_A4 }}
           >
             <Documento cot={cot} />

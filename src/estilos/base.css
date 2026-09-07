@@ -290,6 +290,37 @@ select {
   cursor: not-allowed;
 }
 
+/* Un botón ocupado no es un botón apagado: está trabajando. Apagarlo al 45 %
+   hace pensar que se ha roto justo cuando más se le mira. */
+.boton[aria-busy='true']:disabled {
+  opacity: 1;
+  cursor: progress;
+}
+
+.girando {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: girar 700ms linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* Con el movimiento reducido, la rueda se congelaría a media vuelta y parecería
+   colgada. Basta con la palabra: «Generando…» ya lo dice todo. */
+@media (prefers-reduced-motion: reduce) {
+  .girando {
+    display: none;
+  }
+}
+
 /* Todo control contesta a la pulsación con el mismo gesto. Las filas anchas se
    hunden menos: un 0.97 en una fila de 900px se lee como un salto. */
 .enlace-nav:active,

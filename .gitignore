@@ -3,3 +3,7 @@ dist
 .impeccable/review
 *.local
 .impeccable/questions
+
+# Andamios de pruebas locales, nunca en el repositorio.
+.tmp-*
+public/__*

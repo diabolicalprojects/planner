@@ -6,6 +6,7 @@
 //
 // En los dos casos los datos salen enteros a un .json cuando quieras.
 
+import { descargar } from './descargar.js'
 import { sanear, sanearCotizacion } from './modelo.js'
 
 const CLAVE = 'diabolical.planificador.v1'
@@ -105,15 +106,11 @@ export function exportar({ proyectos, cotizaciones }) {
     null,
     2,
   )
-  const blob = new Blob([contenido], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
   const sello = new Date().toISOString().slice(0, 10)
-  a.href = url
-  a.download = `diabolical-proyectos-${sello}.json`
-  a.click()
-  URL.revokeObjectURL(url)
-  return a.download
+  return descargar(
+    new Blob([contenido], { type: 'application/json' }),
+    `diabolical-proyectos-${sello}.json`,
+  )
 }
 
 /**
