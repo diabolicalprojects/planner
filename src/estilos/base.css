@@ -1,0 +1,501 @@
+/* ===========================================================================
+   DIABOLICAL · Planificador — sistema visual.
+   Monocromo suave: fondo gris claro, tarjetas blancas muy redondeadas, tinta
+   casi negra y un único acento que es el propio negro de la marca. Sin color.
+   =========================================================================== */
+
+@import '@fontsource-variable/manrope';
+
+:root {
+  /* --- Superficies ---------------------------------------------------- */
+  --fondo: #eef0f4;
+  --tarjeta: #ffffff;
+  --hundido: #f3f5f8;
+  --hundido-fuerte: #e9edf3;
+  --relleno-control: #e6eaf1; /* relleno de botón secundario: se separa del
+     blanco de la tarjeta lo bastante para leerse como pulsable */
+  --negro: #14161a;
+  --negro-suave: #24272e;
+
+  /* --- Tinta ----------------------------------------------------------- */
+  --tinta: #14161a; /* 15.9:1 sobre blanco */
+  --tinta-media: #5c636e; /* 6.3:1 sobre blanco, 5.5:1 sobre el gris de página */
+  --tinta-suave: #616873; /* 5.6:1 sobre blanco, 4.9:1 sobre el gris de página.
+     Es el nivel más claro del sistema y aún así pasa el suelo sobre TODOS los
+     fondos donde se usa, no sólo sobre blanco. */
+  --sobre-negro: #ffffff;
+  --sobre-negro-suave: #a8aeb9; /* 6.4:1 sobre --negro */
+
+  --linea: #e3e8ef; /* separar contenido */
+  --linea-fuerte: #d3dae4; /* separar contenido con más peso */
+  --borde-control: #7d8797; /* 3.6:1 sobre blanco, 3.2:1 sobre el gris: un
+     control tiene que verse como un control, no como texto suelto */
+
+  /* --- Forma ------------------------------------------------------------ */
+  --radio-xs: 8px;
+  --radio-s: 12px;
+  --radio-m: 18px;
+  --radio-l: 26px;
+  --pildora: 999px;
+
+  --sombra-baja: 0 1px 2px rgba(20, 22, 26, 0.04), 0 1px 3px rgba(20, 22, 26, 0.03);
+  --sombra: 0 1px 2px rgba(20, 22, 26, 0.04), 0 10px 26px -8px rgba(20, 22, 26, 0.1);
+  --sombra-alta: 0 2px 4px rgba(20, 22, 26, 0.06), 0 18px 40px -12px rgba(20, 22, 26, 0.18);
+
+  /* --- Tipografía -------------------------------------------------------- */
+  --letra: 'Manrope Variable', 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --t-micro: 0.75rem; /* 12 */
+  --t-peque: 0.8125rem; /* 13 */
+  --t-base: 0.9375rem; /* 15 */
+  --t-medio: 1.0625rem; /* 17 */
+  --t-titulo: 1.375rem; /* 22 */
+  --t-pagina: 1.875rem; /* 30 */
+  --t-cifra: 2.125rem; /* 34 */
+
+  /* --- Ritmo ------------------------------------------------------------- */
+  --e1: 4px;
+  --e2: 8px;
+  --e3: 12px;
+  --e4: 16px;
+  --e5: 24px;
+  --e6: 32px;
+
+  --curva: cubic-bezier(0.23, 1, 0.32, 1);
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--fondo);
+  color: var(--tinta);
+  font-family: var(--letra);
+  font-size: var(--t-base);
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.006em;
+  font-variant-numeric: tabular-nums;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure,
+dl,
+dd {
+  margin: 0;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--negro);
+  color: var(--sobre-negro);
+}
+
+:focus-visible {
+  outline: 2px solid var(--negro);
+  outline-offset: 2px;
+  border-radius: var(--radio-xs);
+}
+
+.oscuro :focus-visible {
+  outline-color: var(--sobre-negro);
+}
+
+/* Barras de desplazamiento discretas, del mismo material que el resto. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--linea-fuerte) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--linea-fuerte);
+  border: 3px solid transparent;
+  border-radius: var(--pildora);
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--tinta-suave);
+  background-clip: content-box;
+}
+
+/* ===========================================================================
+   Tipografía
+   =========================================================================== */
+
+.titulo-pagina {
+  font-size: var(--t-pagina);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.titulo-seccion {
+  font-size: var(--t-titulo);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.titulo-tarjeta {
+  font-size: var(--t-medio);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+/* Rótulo pequeño en versalitas. Se usa poco y nunca sobre un titular. */
+.rotulo {
+  font-size: var(--t-micro);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta-media);
+}
+
+.apoyo {
+  font-size: var(--t-peque);
+  font-weight: 500;
+  color: var(--tinta-suave);
+}
+
+.cifra {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* ===========================================================================
+   Superficies
+   =========================================================================== */
+
+.tarjeta {
+  background: var(--tarjeta);
+  border-radius: var(--radio-l);
+  box-shadow: var(--sombra);
+}
+
+.tarjeta--negra {
+  background: var(--negro);
+  color: var(--sobre-negro);
+}
+
+/* ===========================================================================
+   Botones
+   =========================================================================== */
+
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--e2);
+  min-height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--pildora);
+  background: var(--relleno-control);
+  color: var(--tinta);
+  font-size: var(--t-peque);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 140ms var(--curva),
+    transform 140ms var(--curva),
+    box-shadow 140ms var(--curva);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .boton:hover:not(:disabled) {
+    background: var(--linea-fuerte);
+  }
+}
+
+.boton:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.boton--principal {
+  background: var(--negro);
+  color: var(--sobre-negro);
+  box-shadow: var(--sombra-baja);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .boton--principal:hover:not(:disabled) {
+    background: var(--negro-suave);
+  }
+}
+
+.boton--contorno {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--borde-control);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .boton--contorno:hover:not(:disabled) {
+    background: var(--hundido);
+  }
+}
+
+.boton--icono {
+  min-width: 40px;
+  padding: 0;
+  border-radius: var(--radio-s);
+}
+
+.boton--pequeno {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: var(--t-micro);
+}
+
+.boton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Todo control contesta a la pulsación con el mismo gesto. Las filas anchas se
+   hunden menos: un 0.97 en una fila de 900px se lee como un salto. */
+.enlace-nav:active,
+.filtro:active,
+.estado:active,
+.tarea__quitar:active,
+.buscador__limpiar:active,
+.lista__orden:active {
+  transform: scale(0.97);
+}
+
+.proyecto:active,
+.entrega:active,
+.lista__fila:active {
+  transform: scale(0.995);
+}
+
+/* ===========================================================================
+   Campos
+   =========================================================================== */
+
+.bloque-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.etiqueta-campo {
+  font-size: var(--t-micro);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta-media);
+}
+
+.campo {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 14px;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-s);
+  background: var(--tarjeta);
+  font-size: var(--t-base);
+  font-weight: 600;
+  transition:
+    border-color 140ms var(--curva),
+    box-shadow 140ms var(--curva);
+}
+
+.campo::placeholder {
+  color: var(--tinta-suave);
+  font-weight: 500;
+}
+
+.campo:hover {
+  border-color: var(--linea-fuerte);
+}
+
+.campo:focus {
+  outline: 0;
+  border-color: var(--negro);
+  box-shadow: 0 0 0 3px rgba(20, 22, 26, 0.08);
+}
+
+.campo--area {
+  min-height: 104px;
+  resize: vertical;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.pista {
+  font-size: var(--t-micro);
+  font-weight: 500;
+  color: var(--tinta-suave);
+}
+
+/* Casilla dibujada, para que el tic tenga el mismo trazo que los iconos. */
+.casilla {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: var(--t-peque);
+  font-weight: 600;
+}
+
+.casilla input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.casilla__caja {
+  position: relative;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--linea-fuerte);
+  border-radius: 6px;
+  background: var(--tarjeta);
+  transition:
+    background-color 140ms var(--curva),
+    border-color 140ms var(--curva);
+}
+
+.casilla:hover .casilla__caja {
+  border-color: var(--tinta-suave);
+}
+
+.casilla input:checked + .casilla__caja {
+  background: var(--negro);
+  border-color: var(--negro);
+}
+
+.casilla input:checked + .casilla__caja::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2.5px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--sobre-negro);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.casilla input:focus-visible + .casilla__caja {
+  outline: 2px solid var(--negro);
+  outline-offset: 2px;
+}
+
+/* ===========================================================================
+   Distintivos
+   =========================================================================== */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--pildora);
+  background: var(--hundido);
+  color: var(--tinta-media);
+  font-size: var(--t-micro);
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+}
+
+.chip--negro {
+  background: var(--negro);
+  color: var(--sobre-negro);
+}
+
+.chip--contorno {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--borde-control);
+  color: var(--tinta-media);
+}
+
+.chip__punto {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ===========================================================================
+   Barra de avance
+   =========================================================================== */
+
+.avance {
+  height: 6px;
+  border-radius: var(--pildora);
+  background: var(--hundido-fuerte);
+  overflow: hidden;
+}
+
+.avance__relleno {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--negro);
+  transition: width 320ms var(--curva);
+}
+
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

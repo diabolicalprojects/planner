@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-06T00:00:00.000Z",
+  "title": "Design System: Planificador DIABOLICAL",
+  "extensions": {
+    "colorMeta": {
+      "negro": {
+        "role": "primary",
+        "displayName": "Negro de marca",
+        "canonical": "#14161a",
+        "tonalRamp": ["#14161a", "#24272e", "#5c636e", "#6f7783", "#a8aeb9"]
+      },
+      "fondo": {
+        "role": "neutral",
+        "displayName": "Fondo",
+        "canonical": "#eef0f4",
+        "tonalRamp": ["#ffffff", "#f3f5f8", "#e9edf3", "#eef0f4", "#e3e8ef", "#d3dae4"]
+      }
+    },
+    "typographyMeta": {
+      "pagina": {
+        "displayName": "Manrope 800",
+        "purpose": "Titulares y cifras de indicador, con tracking negativo de -0.02 a -0.04em."
+      },
+      "body": {
+        "displayName": "Manrope 500-700",
+        "purpose": "Todo lo demás. Una sola familia en todo el producto, con tabular-nums declarado en body."
+      }
+    },
+    "shadows": [
+      {
+        "name": "sombra-baja",
+        "value": "0 1px 2px rgba(20,22,26,.04), 0 1px 3px rgba(20,22,26,.03)",
+        "purpose": "Tarjeta de proyecto en reposo, buscador, distintivo de filtro."
+      },
+      {
+        "name": "sombra",
+        "value": "0 1px 2px rgba(20,22,26,.04), 0 10px 26px -8px rgba(20,22,26,.1)",
+        "purpose": "Tarjetas de contenido y hover de una tarjeta de proyecto."
+      },
+      {
+        "name": "sombra-alta",
+        "value": "0 2px 4px rgba(20,22,26,.06), 0 18px 40px -12px rgba(20,22,26,.18)",
+        "purpose": "La tarjeta mientras se arrastra."
+      }
+    ],
+    "motion": [
+      {
+        "name": "curva",
+        "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Ease-out fuerte, la única curva del sistema. 140ms en estados, 160ms en el tablero, 320ms en la barra de avance."
+      },
+      {
+        "name": "pulsacion",
+        "value": "transform: scale(0.97), 140ms",
+        "purpose": "Respuesta física de todo botón. Es el único movimiento con el que la interfaz contesta al dedo."
+      },
+      {
+        "name": "aparecer",
+        "value": "opacity 0→1 y translateY 6px→0, 220ms",
+        "purpose": "Entrada del detalle y de las páginas de texto. No hay orquestación de carga: la app abre en la tarea."
+      }
+    ],
+    "breakpoints": [
+      { "name": "tablero-dos-columnas", "value": "1400px" },
+      { "name": "rail-abajo", "value": "1180px" },
+      { "name": "una-columna", "value": "900px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón principal",
+      "kind": "button",
+      "refersTo": "boton-principal",
+      "description": "Acción primaria. Píldora negra con icono a la izquierda.",
+      "html": "<button class=\"ds-boton ds-boton--principal\">Nuevo proyecto</button>",
+      "css": ".ds-boton { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 18px; border: 0; border-radius: 999px; background: #f3f5f8; color: #14161a; font: 700 13px/1.5 'Manrope Variable', system-ui, sans-serif; letter-spacing: -0.01em; cursor: pointer; transition: background-color 140ms cubic-bezier(.23,1,.32,1), transform 140ms cubic-bezier(.23,1,.32,1); } .ds-boton:active { transform: scale(0.97); } .ds-boton--principal { background: #14161a; color: #fff; box-shadow: 0 1px 2px rgba(20,22,26,.04), 0 1px 3px rgba(20,22,26,.03); } .ds-boton--principal:hover { background: #24272e; }"
+    },
+    {
+      "name": "Tarjeta de proyecto",
+      "kind": "card",
+      "refersTo": "tarjeta",
+      "description": "El objeto central del tablero. Se arrastra entre columnas y se abre con Intro.",
+      "html": "<article class=\"ds-proyecto\"><h3>Landing y reservas para el club</h3><p>X3 Padel Club</p><div class=\"ds-avance\"><i style=\"width:60%\"></i></div><footer><b>$48,000</b><span>12 sep</span></footer></article>",
+      "css": ".ds-proyecto { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 18px; background: #fff; box-shadow: 0 1px 2px rgba(20,22,26,.04), 0 1px 3px rgba(20,22,26,.03); cursor: grab; touch-action: none; transition: box-shadow 160ms cubic-bezier(.23,1,.32,1), transform 160ms cubic-bezier(.23,1,.32,1); } .ds-proyecto:hover { box-shadow: 0 1px 2px rgba(20,22,26,.04), 0 10px 26px -8px rgba(20,22,26,.1); transform: translateY(-1px); } .ds-proyecto h3 { margin: 0; font: 700 15px/1.3 'Manrope Variable', sans-serif; letter-spacing: -0.015em; } .ds-proyecto p { margin: 2px 0 0; font: 600 12px/1.5 'Manrope Variable', sans-serif; color: #6f7783; } .ds-avance { height: 6px; border-radius: 999px; background: #e9edf3; overflow: hidden; } .ds-avance i { display: block; height: 100%; background: #14161a; } .ds-proyecto footer { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #e3e8ef; font: 800 13px 'Manrope Variable', sans-serif; } .ds-proyecto footer span { font-weight: 600; font-size: 12px; color: #6f7783; }"
+    },
+    {
+      "name": "Barra lateral",
+      "kind": "nav",
+      "refersTo": "lateral",
+      "description": "Navegación permanente. Sustituye a una barra de menús desplegable.",
+      "html": "<aside class=\"ds-lateral\"><a class=\"ds-nav ds-nav--activo\">Tablero <span>4</span></a><a class=\"ds-nav\">Proyectos <span>6</span></a></aside>",
+      "css": ".ds-lateral { display: flex; flex-direction: column; gap: 2px; width: 232px; padding: 24px 16px; border-radius: 26px; background: #14161a; } .ds-nav { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 12px; color: #a8aeb9; font: 700 13px 'Manrope Variable', sans-serif; cursor: pointer; transition: background-color 140ms cubic-bezier(.23,1,.32,1), color 140ms cubic-bezier(.23,1,.32,1); } .ds-nav:hover { background: rgba(255,255,255,.08); color: #fff; } .ds-nav--activo { background: #fff; color: #14161a; } .ds-nav span { margin-left: auto; padding: 1px 8px; border-radius: 999px; background: rgba(255,255,255,.12); font-size: 11px; } .ds-nav--activo span { background: rgba(20,22,26,.1); }"
+    },
+    {
+      "name": "Selector de estado",
+      "kind": "custom",
+      "refersTo": "chip",
+      "description": "Cambia el estado del proyecto desde el detalle, sin abrir un desplegable.",
+      "html": "<div class=\"ds-estados\"><button>Idea</button><button class=\"ds-estado--activo\">En curso</button><button>Pausado</button><button>Entregado</button></div>",
+      "css": ".ds-estados { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: #f3f5f8; } .ds-estados button { padding: 7px 14px; border: 0; border-radius: 999px; background: transparent; color: #5c636e; font: 700 12px 'Manrope Variable', sans-serif; cursor: pointer; } .ds-estado--activo { background: #fff; color: #14161a; box-shadow: 0 1px 2px rgba(20,22,26,.04), 0 1px 3px rgba(20,22,26,.03); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El panel monocromo suave",
+    "overview": "Panel monocromo suave. La dirección la fijó el usuario con tres referencias de la misma familia: fondo gris claro, tarjetas blancas muy redondeadas con sombra baja, barra lateral negra redondeada y botones píldora negros.\n\nNo hay color. El acento es el propio negro de la marca, que ya es monocroma, así que la identidad y el sistema coinciden sin esfuerzo. Lo que en otros paneles hace el color, distinguir estados, aquí lo hacen la posición en el tablero, un punto y una etiqueta escrita.\n\nTodo el dinero está en pesos mexicanos y se formatea con es-MX.",
+    "keyCharacteristics": [
+      "Sin color: el único acento es el negro de la marca",
+      "Fondo gris, tarjetas blancas de radio 26 y sombras muy bajas",
+      "Una sola familia tipográfica, Manrope, de 500 a 800",
+      "Tres niveles de tinta, ninguno por debajo de 4,5:1",
+      "El estado se dice con posición, forma y palabra, nunca con color",
+      "Todo el dinero en pesos mexicanos"
+    ],
+    "rules": [
+      { "name": "El estado no se dice con color", "body": "Se dice con la columna, con un punto de forma distinta por estado y con la palabra escrita. Un daltónico lee este tablero igual que cualquiera.", "section": "colors" },
+      { "name": "Tres niveles de tinta", "body": "tinta #14161a a 15,9:1, tinta-media #5c636e a 6,3:1 y tinta-suave #6f7783 a 4,8:1. Nada por debajo, y nunca opacidad para apagar texto.", "section": "colors" },
+      { "name": "La sombra sube con el gesto", "body": "Una tarjeta pasa de sombra baja a media al pasar por encima y a alta mientras se arrastra. El estado no cambia la elevación.", "section": "elevation" },
+      { "name": "Ninguna cifra viaja sola", "body": "Todo total lleva la desviación que lo explica, y ningún porcentaje se muestra sin la magnitud de la que sale.", "section": "typography" },
+      { "name": "La profundidad no se anida", "body": "Dentro de una tarjeta con sombra, los bloques secundarios son relleno gris sin sombra.", "section": "elevation" }
+    ],
+    "dos": [
+      "Decir el estado con posición, forma y palabra",
+      "Acompañar toda cifra de la desviación que la explica",
+      "Dar alternativa de teclado a todo gesto de arrastre y anunciarlo en una región viva",
+      "Formatear el dinero con es-MX y decir MXN donde haya duda",
+      "Dejar que el contraste de fondo haga la profundidad, no la sombra"
+    ],
+    "donts": [
+      "Introducir un color, ni siquiera para los errores",
+      "Anidar tarjetas con sombra dentro de tarjetas con sombra",
+      "Usar opacidad para apagar texto en vez del siguiente nivel de tinta",
+      "Poner una versalita encima de un titular",
+      "Escribir un porcentaje suelto sin la magnitud de la que sale"
+    ]
+  }
+}
