@@ -55,7 +55,11 @@ Vista principal: tablero por estado tipo Kanban con las columnas Idea · En curs
   planner.diabolicalservices.tech), `localStorage` cuando no lo hay (`npm run dev`).
 - La interfaz sirve igual en teléfono: navegación en barra inferior fija, formularios en una
   columna, objetivos táctiles de 44px y el editor de cotizaciones partido en Datos y Documento.
-- Restricciones: sin autenticación y sin multi-usuario. Es la herramienta de una persona.
+- Acceso con **una contraseña compartida**, comprobada en el servidor, con sesión en cookie
+  firmada de catorce días. Existe sólo cuando hay servidor: en local no hay nada que proteger.
+  No hay cuentas ni roles: quien tiene la contraseña entra, y todos ven y tocan lo mismo.
+- Restricciones: sin cuentas individuales. Es la herramienta de una casa pequeña, no de un
+  equipo con permisos.
 - Terminología en español (el usuario escribe y trabaja en español).
 - Toda cifra de dinero está en pesos mexicanos (MXN), con formato `es-MX`.
 

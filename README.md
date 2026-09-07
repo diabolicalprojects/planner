@@ -69,6 +69,11 @@ La app funciona de dos maneras y decide sola cuál, preguntando por `/api/salud`
 - **Sin servidor** (`npm run dev` a secas): guarda en el `localStorage` de este navegador,
   bajo la clave `diabolical.planificador.v1`, y no sale nada a ninguna red.
 
+En el despliegue hay una puerta: una contraseña compartida que se comprueba en el servidor.
+Lo que queda después es una cookie firmada, `HttpOnly`, que dura catorce días y que ni este
+código ni ningún script de la página pueden leer. Ocho intentos fallidos desde la misma
+dirección cierran la puerta cinco minutos.
+
 Haz copias con **Fichero › Exportar JSON**: baja un archivo `diabolical-proyectos-AAAA-MM-DD.json`
 con toda la pila. **Importar JSON** la devuelve, aquí o en otro ordenador. Si vacías los datos
 del navegador sin haber exportado, la pila se va con ellos.
@@ -90,13 +95,34 @@ Se despliega en Dokploy desde este repositorio con el `Dockerfile` de dos etapas
 | Variable | Para qué |
 | --- | --- |
 | `DATABASE_URL` | Conexión a Postgres. En Dokploy el host es el `appName` del servicio de base de datos. |
+| `CLAVE_HASH` | **Obligatoria.** El hash de la contraseña de acceso. Sin ella la API no sirve nada. |
+| `SECRETO_SESION` | Con qué se firman las sesiones. Sin ella se inventa una al arrancar y cada despliegue echa a todo el mundo. |
 | `PORT` | Puerto dentro del contenedor. Por defecto 3000. |
 | `SEMBRAR` | A `1` siembra proyectos, **sólo si la base está completamente vacía**. Nunca pisa datos. |
 | `SEMILLA_JSON` | Opcional. Un JSON exportado desde la app, para sembrar datos propios sin escribirlos en el repositorio. |
+| `PERMITIR_SIN_CLAVE` | A `1` deja la API abierta sin contraseña. **Sólo para una máquina que no mire a Internet.** |
 
 El esquema se aplica solo al arrancar (`CREATE TABLE IF NOT EXISTS`), así que un despliegue
 nuevo no necesita ningún paso a mano. Para sembrar aparte: `npm run semilla` (y `--forzar` si
 de verdad quieres pisar lo que haya).
+
+### La contraseña
+
+```bash
+npm run clave
+```
+
+Pide la contraseña dos veces sin enseñarla, y escupe las dos líneas que hay que pegar en las
+variables de entorno de Dokploy. La contraseña no sale de tu máquina: no viaja por los
+argumentos —que quedan en el historial del intérprete y en la lista de procesos— ni se guarda
+en ningún archivo. Lo que se copia es el hash, que no sirve para entrar.
+
+Sin `CLAVE_HASH`, el servidor arranca pero **la API contesta 503 a todo**. Es a propósito:
+antes de esto la API estaba abierta y cualquiera que supiera la dirección podía leerse o
+borrarse la cartera entera. Fallar con un error claro es mejor que servir sin candado.
+
+El acceso sólo existe cuando hay servidor. En `npm run dev`, sin backend, no hay a quién
+preguntar ni nada que proteger: los datos están en el navegador de quien mira la pantalla.
 
 ## Cómo está hecho
 

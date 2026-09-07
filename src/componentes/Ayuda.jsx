@@ -3,6 +3,7 @@ import {
   CaretRight,
   Info,
   Keyboard,
+  SignOut,
   UploadSimple,
 } from '@phosphor-icons/react'
 import { Boton, Tarjeta } from './base.jsx'
@@ -18,7 +19,7 @@ const ATAJOS = [
   ['Alt + ↑ ↓', 'Subir o bajar la tarea enfocada'],
 ]
 
-export default function Ayuda({ tipo, volver, irA, alExportar, alImportar }) {
+export default function Ayuda({ tipo, volver, irA, alExportar, alImportar, alSalir }) {
   // El menú de la pestaña «Más» del teléfono. En la barra lateral del escritorio
   // estas mismas entradas están siempre a la vista; aquí son una página, porque
   // en un teléfono no cabe una barra lateral permanente.
@@ -28,6 +29,9 @@ export default function Ayuda({ tipo, volver, irA, alExportar, alImportar }) {
       { rotulo: 'Importar JSON', apoyo: 'Devuelve una copia a esta máquina', Icono: UploadSimple, hacer: alImportar },
       { rotulo: 'Atajos', apoyo: 'Cómo usarlo con teclado', Icono: Keyboard, hacer: () => irA({ vista: 'atajos' }) },
       { rotulo: 'Acerca de', apoyo: 'Qué es esto y dónde viven tus datos', Icono: Info, hacer: () => irA({ vista: 'acerca' }) },
+      ...(alSalir
+        ? [{ rotulo: 'Salir', apoyo: 'Cerrar la sesión en este dispositivo', Icono: SignOut, hacer: alSalir }]
+        : []),
     ]
 
     return (

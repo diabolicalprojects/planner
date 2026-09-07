@@ -14,10 +14,33 @@ import {
   pool,
 } from './base.js'
 import { sembrar } from './semilla.js'
+import {
+  SECRETO_EFIMERO,
+  apuntarFallo,
+  castigo,
+  cookieDeSesion,
+  cookieVacia,
+  COOKIE,
+  firmarSesion,
+  leerCookie,
+  olvidarFallos,
+  quien,
+  sesionValida,
+  verificarClave,
+} from './sesion.js'
 
 const AQUI = dirname(fileURLToPath(import.meta.url))
 const ESTATICO = join(AQUI, '..', 'dist')
 const PUERTO = Number(process.env.PORT || 3000)
+
+const CLAVE_HASH = process.env.CLAVE_HASH || ''
+// Sin contraseña la API queda abierta de par en par, así que por defecto no
+// sirve nada. Abrirla es una decisión que hay que tomar a mano, y sólo tiene
+// sentido en una máquina que no mira a Internet.
+const SIN_CANDADO = process.env.PERMITIR_SIN_CLAVE === '1'
+const PROTEGIDO = Boolean(CLAVE_HASH)
+
+const dentro = (req) => !PROTEGIDO || sesionValida(leerCookie(req, COOKIE))
 
 const TIPOS = {
   '.html': 'text/html; charset=utf-8',
@@ -86,9 +109,59 @@ const servidor = createServer(async (req, res) => {
   const ruta = url.pathname
 
   try {
+    // Pública a propósito: es como la interfaz averigua si hay servidor detrás.
+    // No devuelve ningún dato, sólo si el servidor está vivo y si pide clave.
     if (ruta === '/api/salud') {
       await pool.query('SELECT 1')
-      return responder(res, 200, { ok: true, base: 'postgres' })
+      return responder(res, 200, { ok: true, base: 'postgres', protegido: PROTEGIDO })
+    }
+
+    /* --- Sesión --------------------------------------------------------- */
+
+    if (ruta === '/api/sesion' && req.method === 'GET') {
+      return responder(res, 200, { protegido: PROTEGIDO, dentro: dentro(req) })
+    }
+
+    if (ruta === '/api/sesion' && req.method === 'POST') {
+      if (!PROTEGIDO) return responder(res, 200, { dentro: true, protegido: false })
+
+      const ip = quien(req)
+      const espera = castigo(ip)
+      if (espera > 0) {
+        return responder(res, 429, {
+          error: 'Demasiados intentos.',
+          segundos: Math.ceil(espera / 1000),
+        })
+      }
+
+      const cuerpo = await leerCuerpo(req, 4096)
+      const clave = typeof cuerpo?.clave === 'string' ? cuerpo.clave : ''
+      if (!clave || !(await verificarClave(clave, CLAVE_HASH))) {
+        apuntarFallo(ip)
+        return responder(res, 401, { error: 'La contraseña no es correcta.' })
+      }
+
+      olvidarFallos(ip)
+      return responder(res, 200, { dentro: true }, { 'Set-Cookie': cookieDeSesion(req, firmarSesion()) })
+    }
+
+    if (ruta === '/api/sesion' && req.method === 'DELETE') {
+      return responder(res, 200, { dentro: false }, { 'Set-Cookie': cookieVacia(req) })
+    }
+
+    /* --- De aquí abajo, sólo con la puerta abierta ----------------------- */
+
+    if (ruta.startsWith('/api/')) {
+      if (!PROTEGIDO && !SIN_CANDADO) {
+        return responder(res, 503, {
+          error:
+            'El servidor no tiene contraseña configurada. Genera una con `npm run clave` ' +
+            'y ponla en CLAVE_HASH.',
+        })
+      }
+      if (!dentro(req)) {
+        return responder(res, 401, { error: 'Hay que entrar primero.' })
+      }
     }
 
     // Todo lo que guarda la app, de una vez: la interfaz trabaja con la
@@ -129,6 +202,18 @@ async function arrancar() {
   if (!process.env.DATABASE_URL) {
     console.error('[planificador] Falta DATABASE_URL. El servidor necesita Postgres.')
     process.exit(1)
+  }
+
+  if (!PROTEGIDO) {
+    console.warn(
+      SIN_CANDADO
+        ? '[planificador] PELIGRO: PERMITIR_SIN_CLAVE=1. La API está abierta a cualquiera que sepa la dirección. Esto sólo vale en una máquina que no mira a Internet.'
+        : '[planificador] Falta CLAVE_HASH: la API no servirá nada. Genérala con `npm run clave`.',
+    )
+  } else if (SECRETO_EFIMERO) {
+    console.warn(
+      '[planificador] Falta SECRETO_SESION: se ha inventado una al arrancar, así que cada despliegue cerrará la sesión de todo el mundo. `npm run clave` la propone.',
+    )
   }
 
   await aplicarEsquema()

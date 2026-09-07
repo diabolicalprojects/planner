@@ -9,6 +9,7 @@ import {
   Warning,
   X,
 } from '@phosphor-icons/react'
+import Acceso from './componentes/Acceso.jsx'
 import Ayuda from './componentes/Ayuda.jsx'
 import BarraInferior from './componentes/BarraInferior.jsx'
 import Cotizacion from './componentes/Cotizacion.jsx'
@@ -21,6 +22,8 @@ import Tablero from './componentes/Tablero.jsx'
 import { Boton, Tarjeta } from './componentes/base.jsx'
 import { exportar, importar } from './lib/almacen.js'
 import { responsables } from './lib/modelo.js'
+import { estadoSesion, salir } from './lib/sesion.js'
+import { sesionRenovada } from './lib/almacen.js'
 import { usarProyectos } from './lib/usarProyectos.js'
 
 const TITULOS = {
@@ -36,7 +39,21 @@ const TITULOS = {
 }
 
 export default function App() {
-  const pila = usarProyectos()
+  // Primero la puerta. Hasta saber si hace falta contraseña no se pide ni un
+  // dato: pedirlos sin sesión devolvería 401 y la cartera se vería vacía, que
+  // es la peor manera de enterarse de que no has entrado.
+  const [sesion, setSesion] = useState(null)
+
+  useEffect(() => {
+    let vivo = true
+    estadoSesion().then((estado) => vivo && setSesion(estado))
+    return () => {
+      vivo = false
+    }
+  }, [])
+
+  const dentro = Boolean(sesion?.dentro)
+  const pila = usarProyectos({ activo: dentro })
   const { proyectos } = pila
 
   const [vista, setVista] = useState('tablero')
@@ -239,8 +256,32 @@ export default function App() {
   // editabas, a un dedo de perder el sitio.
   const hayAlta = (enTrabajo || enCotizaciones) && !proyectoAbierto && !cotizacionAbierta
 
+  // Mientras se pregunta por la sesión no se enseña nada: un parpadeo del
+  // planificador antes de mandarte a la puerta es peor que medio segundo en
+  // blanco.
+  if (!sesion) return null
+
+  if (!dentro) {
+    return <Acceso alEntrar={() => setSesion({ ...sesion, dentro: true })} />
+  }
+
   return (
     <div className="marco">
+      {/* La sesión se ha caducado con la aplicación abierta: la puerta vuelve
+          por encima, sin desmontar nada, y lo que estuvieras escribiendo sigue
+          donde estaba hasta que se pueda guardar. */}
+      {pila.caducada ? (
+        <div className="acceso__encima">
+          <Acceso
+            nota="La sesión ha caducado. Vuelve a entrar: lo que tienes en pantalla sigue ahí y se guardará solo."
+            alEntrar={() => {
+              sesionRenovada()
+              pila.reintentarGuardado()
+            }}
+          />
+        </div>
+      ) : null}
+
       <Lateral
         vista={vista}
         irA={irA}
@@ -251,6 +292,7 @@ export default function App() {
         }}
         alExportar={exportarTodo}
         alImportar={abrirArchivo}
+        alSalir={sesion.protegido ? salir : null}
       />
 
       <main className="principal">
@@ -493,6 +535,7 @@ export default function App() {
                 irA={irA}
                 alExportar={exportarTodo}
                 alImportar={abrirArchivo}
+                alSalir={sesion.protegido ? salir : null}
               />
             )}
           </div>

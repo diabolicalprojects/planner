@@ -4,6 +4,7 @@ import App from './App.jsx'
 import './estilos/base.css'
 import './estilos/app.css'
 import './estilos/documento.css'
+import './estilos/acceso.css'
 
 createRoot(document.getElementById('raiz')).render(
   <StrictMode>

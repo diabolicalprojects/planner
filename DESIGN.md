@@ -259,6 +259,21 @@ La **tarjeta de proyecto** es el objeto central: nombre, cliente, barra de avanc
 porcentaje, distintivos sólo si hay algo que avisar, y un pie separado por una línea con el
 importe a la izquierda y la fecha de entrega a la derecha.
 
+### La puerta
+
+La pantalla de acceso es la única de todo el sistema que va en negro, y es una decisión, no un
+capricho: el planificador vive sobre gris claro, y esto es de fuera. Cruzarla se nota.
+
+Todo se invierte. La marca, que dentro aparece del tamaño de un sello en el pie de una hoja,
+aquí se dice entera a 200px. El botón principal, que dentro es negro sobre blanco, aquí es
+blanco sobre negro. El campo no lleva la línea gris del resto del sistema —sobre negro no se
+ve—: se levanta del fondo con un relleno al 7% y un trazo al 36%, que da los mismos 3,3:1 que
+`--borde-control` tiene sobre blanco.
+
+Es también el único sitio donde hay movimiento de entrada: las piezas suben 10px escalonadas
+cada 70ms. Una pantalla que se ve una vez cada muchos días es justo donde una entrada cuidada
+suma en vez de estorbar; el resto de la aplicación, que se ve cien veces al día, no se mueve.
+
 ### Navigation
 
 Barra lateral negra permanente. Sustituye a una barra de menús: lo que antes había que

@@ -15,6 +15,19 @@ const VERSION = 1
 
 let modo = null // 'api' | 'local'
 
+// El servidor ha contestado 401: la sesión ya no vale. Se apunta aquí para que
+// la interfaz pueda pedir la contraseña otra vez sin desmontarse ni perder lo
+// que estuvieras escribiendo.
+let caducada = false
+
+export function sesionCaducada() {
+  return caducada
+}
+
+export function sesionRenovada() {
+  caducada = false
+}
+
 /**
  * Pregunta una sola vez si hay servidor detrás. No basta con que la respuesta
  * sea 200: el servidor de desarrollo de Vite devuelve el index.html para
@@ -55,7 +68,12 @@ function ordenar(datos) {
 export async function cargar() {
   if ((await detectarModo()) === 'api') {
     const res = await fetch('/api/datos')
+    if (res.status === 401) {
+      caducada = true
+      throw new Error('Hay que entrar antes de leer nada.')
+    }
     if (!res.ok) throw new Error('No se pudieron leer los datos del servidor.')
+    caducada = false
     return ordenar(await res.json())
   }
 
@@ -80,6 +98,9 @@ export async function guardar(datos) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cuerpo),
       })
+      // Un 401 aquí no es un fallo de red: es que la sesión ha caducado. Los
+      // datos siguen en pantalla y se guardarán en cuanto se vuelva a entrar.
+      caducada = res.status === 401
       return res.ok
     } catch {
       return false

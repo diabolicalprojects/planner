@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { cargar, detectarModo, guardar, modoActual } from './almacen.js'
+import { cargar, detectarModo, guardar, modoActual, sesionCaducada } from './almacen.js'
 import { cotizacionEnBlanco, nuevoId, proyectoEnBlanco, sanear, sanearCotizacion } from './modelo.js'
 import { proyectosDeEjemplo } from '../data/ejemplo.js'
 
@@ -8,16 +8,21 @@ import { proyectosDeEjemplo } from '../data/ejemplo.js'
  * navegador si no) y escribe en cuanto algo cambia, con un respiro de 400 ms
  * para no golpear la base en cada tecla.
  */
-export function usarProyectos() {
+export function usarProyectos({ activo = true } = {}) {
   const [proyectos, setProyectos] = useState([])
   const [cotizaciones, setCotizaciones] = useState([])
   const [cargando, setCargando] = useState(true)
   const [modo, setModo] = useState(null)
   const [guardadoEn, setGuardadoEn] = useState(null)
   const [falloAlGuardar, setFalloAlGuardar] = useState(false)
+  const [caducada, setCaducada] = useState(false)
+  const [reintento, setReintento] = useState(0)
   const listoParaGuardar = useRef(false)
 
   useEffect(() => {
+    // Con la puerta cerrada no hay nada que leer: el servidor contestaría 401 y
+    // dejaría la cartera vacía en pantalla, que se lee como «no tienes nada».
+    if (!activo) return undefined
     let vivo = true
     ;(async () => {
       const cual = await detectarModo()
@@ -46,17 +51,24 @@ export function usarProyectos() {
     return () => {
       vivo = false
     }
-  }, [])
+  }, [activo])
 
   useEffect(() => {
-    if (!listoParaGuardar.current) return
+    if (!listoParaGuardar.current || !activo) return undefined
     const id = setTimeout(async () => {
       const bien = await guardar({ proyectos, cotizaciones })
       setFalloAlGuardar(!bien)
+      setCaducada(!bien && sesionCaducada())
       if (bien) setGuardadoEn(Date.now())
     }, 400)
     return () => clearTimeout(id)
-  }, [proyectos, cotizaciones])
+  }, [proyectos, cotizaciones, activo, reintento])
+
+  /** Volver a intentar el guardado que se quedó a medias, sin tocar los datos. */
+  const reintentarGuardado = useCallback(() => {
+    setCaducada(false)
+    setReintento((n) => n + 1)
+  }, [])
 
   const crear = useCallback((parcial = {}) => {
     const ficha = { ...proyectoEnBlanco(), ...parcial }
@@ -207,6 +219,8 @@ export function usarProyectos() {
     modo: modo ?? modoActual(),
     guardadoEn,
     falloAlGuardar,
+    caducada,
+    reintentarGuardado,
     crear,
     actualizar,
     borrar,

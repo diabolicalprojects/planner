@@ -5,6 +5,7 @@ import {
   Kanban,
   Keyboard,
   ListBullets,
+  SignOut,
   UploadSimple,
 } from '@phosphor-icons/react'
 
@@ -23,7 +24,7 @@ const AYUDA = [
  * Navegación permanente. Sustituye a la barra de menús: lo que antes había que
  * desplegar para encontrar, ahora se ve siempre.
  */
-export default function Lateral({ vista, irA, cuantos, alExportar, alImportar }) {
+export default function Lateral({ vista, irA, cuantos, alExportar, alImportar, alSalir }) {
   const fila = ({ id, etiqueta, Icono }, cuenta) => (
     <button
       type="button"
@@ -72,6 +73,12 @@ export default function Lateral({ vista, irA, cuantos, alExportar, alImportar })
           Importar JSON
         </button>
         {AYUDA.map((entrada) => fila(entrada))}
+        {alSalir ? (
+          <button type="button" className="enlace-nav" onClick={alSalir}>
+            <SignOut size={19} />
+            Salir
+          </button>
+        ) : null}
       </div>
     </aside>
   )

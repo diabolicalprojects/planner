@@ -1,0 +1,215 @@
+/* ===========================================================================
+   La puerta. La única pantalla en negro de todo el sistema: el planificador
+   vive sobre gris claro, y esto es de fuera. Los papeles se invierten enteros
+   —el botón, que dentro es negro sobre blanco, aquí es blanco sobre negro— y
+   la marca, que dentro aparece del tamaño de un sello, aquí se dice completa.
+   =========================================================================== */
+
+.acceso {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: var(--e5);
+  /* En un teléfono con muescas y barra de gestos, el aire va donde toca. */
+  padding-top: max(var(--e5), env(safe-area-inset-top));
+  padding-bottom: max(var(--e5), env(safe-area-inset-bottom));
+  background: var(--negro);
+  color: var(--sobre-negro);
+}
+
+.acceso__caja {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 340px;
+}
+
+/*
+ * Un solo momento con movimiento, y va aquí: esta pantalla se ve una vez cada
+ * muchos días, que es justo donde una entrada cuidada suma en vez de estorbar.
+ * Las piezas entran escalonadas de arriba abajo, 70 ms de diferencia, con la
+ * misma curva de toda la aplicación.
+ *
+ * La opacidad de partida vive en el fotograma, no en la regla: si el navegador
+ * no anima —extensiones, ajustes, un fallo—, el formulario sale visible en vez
+ * de quedarse invisible para siempre.
+ */
+.acceso__logo,
+.acceso__apoyo,
+.acceso__bloque,
+.acceso__boton {
+  animation: entrar-acceso 460ms var(--curva) backwards;
+}
+
+.acceso__apoyo {
+  animation-delay: 70ms;
+}
+
+.acceso__bloque {
+  animation-delay: 140ms;
+}
+
+.acceso__boton {
+  animation-delay: 200ms;
+}
+
+@keyframes entrar-acceso {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.acceso__logo {
+  display: block;
+  width: 200px;
+  height: auto;
+  margin-bottom: var(--e3);
+}
+
+.acceso__apoyo {
+  margin: 0 0 var(--e6);
+  font-size: var(--t-peque);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sobre-negro-suave);
+}
+
+.acceso__nota-alta {
+  margin: calc(var(--e6) * -1 + var(--e4)) 0 var(--e5);
+  padding: var(--e3) var(--e4);
+  border-radius: var(--radio-s);
+  background: rgba(255, 255, 255, 0.07);
+  font-size: var(--t-peque);
+  line-height: 1.5;
+  color: var(--sobre-negro);
+  animation: entrar-acceso 460ms var(--curva) 100ms backwards;
+}
+
+.acceso__bloque {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e2);
+  margin-bottom: var(--e4);
+}
+
+.acceso__etiqueta {
+  font-size: var(--t-micro);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sobre-negro-suave);
+}
+
+.acceso__campo {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--radio-s);
+  /* Sobre negro no valen ni la línea gris ni la sombra del resto del sistema:
+     el campo se separa del fondo levantándose un poco.
+     El trazo va al 36 % porque al 16 % medía 1,6:1 contra el fondo: se veía en
+     una pantalla buena y desaparecía en cualquier otra. Al 36 % da 3,3:1, la
+     misma relación que tiene --borde-control sobre blanco en el resto de la
+     aplicación. Un control tiene que verse como un control. */
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.36);
+  color: var(--sobre-negro);
+  font-family: inherit;
+  font-size: var(--t-medio);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  transition:
+    background-color 140ms var(--curva),
+    box-shadow 140ms var(--curva);
+}
+
+.acceso__campo:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset 0 0 0 1px var(--sobre-negro),
+    0 0 0 3px rgba(255, 255, 255, 0.14);
+}
+
+.acceso__nota {
+  margin: 0;
+  font-size: var(--t-micro);
+  font-weight: 600;
+  color: var(--sobre-negro-suave);
+}
+
+/* El botón principal del sistema, del revés. */
+.acceso__boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--e2);
+  width: 100%;
+  min-height: 50px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: var(--pildora);
+  background: var(--sobre-negro);
+  color: var(--negro);
+  font-family: inherit;
+  font-size: var(--t-base);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition:
+    opacity 140ms var(--curva),
+    transform 140ms var(--curva);
+}
+
+.acceso__boton:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Sólo se desactiva mientras envía, y ahí `aria-busy` lo devuelve al 100 %. La
+   regla se queda por si acaso, al 55 %: al 40 % el texto negro encima caía a
+   3,8:1 y sobre negro parecía una avería, no un botón esperando. */
+.acceso__boton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Trabajando no es apagado: al 40 % parece que se ha roto justo cuando más se
+   le mira. */
+.acceso__boton[aria-busy='true']:disabled {
+  opacity: 1;
+  cursor: progress;
+}
+
+.acceso__error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--e2);
+  margin: var(--e4) 0 0;
+  font-size: var(--t-peque);
+  font-weight: 600;
+  /* Blanco, no rojo: la marca es monocroma y el sitio ya dice que es un error. */
+  color: var(--sobre-negro);
+}
+
+.acceso__error svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+/* ===========================================================================
+   La puerta, cuando llega tarde: la sesión caduca con la aplicación abierta.
+   Va por encima sin desmontar nada, así que lo que estuvieras escribiendo
+   sigue en su sitio y se guarda en cuanto vuelves a entrar.
+   =========================================================================== */
+
+.acceso__encima {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: auto;
+  background: var(--negro);
+}
