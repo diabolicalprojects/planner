@@ -24,6 +24,9 @@ los borra de un clic cuando metas los tuyos.
   *Producto propio* es lo que lanza la agencia por su cuenta: no tiene cliente, no se cobra,
   su fecha es la de **lanzamiento** y su importe es **inversión**. El segmentado de arriba
   filtra entre los dos, y con «Producto propio» puesto la última columna se llama *Lanzado*.
+- **Las tareas llevan responsable.** Un disco con las iniciales en cada tarea, y los discos
+  apilados en la tarjeta del tablero para ver de un vistazo quién anda en qué. Es texto libre
+  con autocompletado de la gente que ya aparece: aquí no hay entidad «equipo».
 - **La caja sólo cuenta dinero de clientes.** Lo que gastas en producto propio va en su propia
   tarjeta, porque sumarlo mentiría sobre lo que tienes por cobrar.
 - **El resumen** de la derecha suma la cartera. Ninguna cifra va sola: cada total lleva la
@@ -44,8 +47,11 @@ los borra de un clic cuando metas los tuyos.
 
 ## Dónde viven los datos
 
-En el `localStorage` de este navegador, bajo la clave `diabolical.planificador.v1`. No sale
-nada a ninguna red.
+La app funciona de dos maneras y decide sola cuál, preguntando por `/api/salud` al arrancar:
+
+- **Con servidor** (el despliegue): habla con `/api` y los datos viven en Postgres.
+- **Sin servidor** (`npm run dev` a secas): guarda en el `localStorage` de este navegador,
+  bajo la clave `diabolical.planificador.v1`, y no sale nada a ninguna red.
 
 Haz copias con **Fichero › Exportar JSON**: baja un archivo `diabolical-proyectos-AAAA-MM-DD.json`
 con toda la pila. **Importar JSON** la devuelve, aquí o en otro ordenador. Si vacías los datos
@@ -55,8 +61,26 @@ del navegador sin haber exportado, la pila se va con ellos.
 
 ```bash
 npm run build
-npm run preview
+npm start
 ```
+
+`npm start` levanta el servidor de `servidor/indice.js`, que sirve el build y la API. Necesita
+`DATABASE_URL`; copia `.env.example` y rellénalo.
+
+### Despliegue
+
+Se despliega en Dokploy desde este repositorio con el `Dockerfile` de dos etapas.
+
+| Variable | Para qué |
+| --- | --- |
+| `DATABASE_URL` | Conexión a Postgres. En Dokploy el host es el `appName` del servicio de base de datos. |
+| `PORT` | Puerto dentro del contenedor. Por defecto 3000. |
+| `SEMBRAR` | A `1` siembra proyectos, **sólo si la base está completamente vacía**. Nunca pisa datos. |
+| `SEMILLA_JSON` | Opcional. Un JSON exportado desde la app, para sembrar datos propios sin escribirlos en el repositorio. |
+
+El esquema se aplica solo al arrancar (`CREATE TABLE IF NOT EXISTS`), así que un despliegue
+nuevo no necesita ningún paso a mano. Para sembrar aparte: `npm run semilla` (y `--forzar` si
+de verdad quieres pisar lo que haya).
 
 ## Cómo está hecho
 

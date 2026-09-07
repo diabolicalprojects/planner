@@ -35,10 +35,14 @@ Uso de escritorio, sesiones cortas y frecuentes (revisar por la mañana, actuali
 - La caja (presupuestado, cobrado, pendiente) cuenta SÓLO proyectos de cliente. La inversión
   en producto propio se suma aparte: mezclarlas mentiría sobre lo que hay por cobrar.
 - Campos por proyecto: nombre, cliente, estado, fecha de inicio, fecha de entrega; presupuesto e indicador de cobrado/pendiente; lista de tareas con check y progreso calculado; notas libres, enlace (web/repo) y etiquetas.
-- Filtrado y búsqueda por cliente, etiqueta y texto.
+- Cada tarea puede tener una persona responsable (texto libre con autocompletado; no existe
+  una entidad «equipo» en el producto).
+- Filtrado y búsqueda por cliente, etiqueta, responsable y texto.
 - Totales agregados de cartera (presupuestado, cobrado, pendiente) visibles sin entrar a ningún proyecto.
 - Exportar e importar toda la base como archivo `.json`.
-- Restricciones: sin backend, sin red, sin autenticación, sin multi-usuario. Todo el estado cabe en `localStorage`.
+- Persistencia doble según dónde corra: Postgres cuando hay servidor (el despliegue en
+  planner.diabolicalservices.tech), `localStorage` cuando no lo hay (`npm run dev`).
+- Restricciones: sin autenticación y sin multi-usuario. Es la herramienta de una persona.
 - Terminología en español (el usuario escribe y trabaja en español).
 - Toda cifra de dinero está en pesos mexicanos (MXN), con formato `es-MX`.
 
