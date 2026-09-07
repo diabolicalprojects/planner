@@ -735,8 +735,17 @@
 .detalle__cabecera {
   display: flex;
   align-items: flex-start;
+  flex-wrap: wrap;
   gap: var(--e4);
   padding: var(--e5) var(--e5) var(--e4);
+}
+
+/* La tira de estados baja a su propio renglón y ocupa la tarjeta entera. Antes
+   compartía línea con el título y el botón de volver, y en un teléfono le
+   quedaban 267 px para 321: ENTREGADO se caía fuera, que es justo el estado que
+   se pulsa al cerrar un trabajo. */
+.detalle__meta {
+  flex: 1 0 100%;
 }
 
 .detalle__titulo {
@@ -773,7 +782,7 @@
   display: flex;
   align-items: center;
   gap: var(--e2);
-  margin-top: 10px;
+  margin-top: 2px;
   flex-wrap: wrap;
 }
 
@@ -784,9 +793,28 @@
 .estados {
   display: flex;
   gap: 4px;
+  max-width: 100%;
   padding: 4px;
   border-radius: var(--pildora);
   background: var(--hundido);
+}
+
+/*
+ * Cuatro pastillas no caben en 390 px: empujaban la página 21 px más ancha que
+ * la pantalla y todo se desplazaba de lado.
+ *
+ * En estrecho bajan de renglón en vez de deslizarse. Son cuatro opciones
+ * excluyentes y hay que verlas todas para elegir: la que se salía era siempre
+ * RECHAZADA, escondida tras un gesto que nada anunciaba. Un segundo renglón
+ * cuesta 42 px y no esconde nada. Al envolverse, el contorno deja de ser una
+ * píldora —dos filas dentro de un estadio quedan raras— y pasa al radio de los
+ * bloques, que es como se dibuja un selector de segmentos en un teléfono.
+ */
+@media (max-width: 640px) {
+  .estados {
+    flex-wrap: wrap;
+    border-radius: var(--radio-m);
+  }
 }
 
 .estado {
@@ -1445,16 +1473,6 @@
     margin-top: var(--e3);
   }
 
-  .tablero {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  /* Con las columnas apiladas el arrastre no lleva a ningún sitio, y bloquear
-     el gesto dejaba la página sin poder desplazarse. */
-  .proyecto {
-    touch-action: auto;
-  }
-
   .raíl {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1491,7 +1509,391 @@
   }
 }
 
+/* ===========================================================================
+   El teléfono
+   ---------------------------------------------------------------------------
+   No es el escritorio encogido. Cambian dos cosas de fondo:
+
+   · La navegación baja. La barra lateral negra es una pieza de escritorio;
+     apilada arriba se comía un tercio de la pantalla y se iba con el
+     desplazamiento, así que para cambiar de vista había que subir del todo.
+     Abajo y fija cae donde llega el pulgar y no se mueve nunca.
+   · Todo lo que se toca crece. Un ratón acierta en 24 px; un dedo no.
+   =========================================================================== */
+
+.barra-inferior {
+  display: none;
+  position: fixed;
+  z-index: 40;
+  left: var(--e3);
+  right: var(--e3);
+  /* Por encima de la barra de gestos del teléfono, nunca debajo. */
+  bottom: max(var(--e3), env(safe-area-inset-bottom));
+  /* En una tableta, estirada de lado a lado, cuatro pestañas quedan náufragas
+     a un palmo unas de otras. Con tope y centrada sigue siendo un objeto. */
+  max-width: 460px;
+  margin-inline: auto;
+  padding: 6px;
+  border-radius: var(--radio-l);
+  background: var(--negro);
+  box-shadow: var(--sombra-alta);
+}
+
+.pestana {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 2px 7px;
+  border: 0;
+  border-radius: var(--radio-m);
+  background: transparent;
+  color: var(--sobre-negro-suave);
+  font-family: inherit;
+  font-size: var(--t-micro);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: color 140ms var(--curva);
+}
+
+/* La misma inversión que marca la vista activa en la barra lateral, a escala
+   de icono: aquí un rótulo blanco sobre pastilla blanca no cabría. */
+.pestana__icono {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 26px;
+  border-radius: var(--pildora);
+  transition:
+    background-color 160ms var(--curva),
+    color 160ms var(--curva);
+}
+
+.pestana__rotulo {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pestana--activa {
+  color: var(--sobre-negro);
+}
+
+.pestana--activa .pestana__icono {
+  background: var(--sobre-negro);
+  color: var(--negro);
+}
+
+.pestana:active {
+  transform: scale(0.96);
+}
+
+/* --- El menú de la pestaña «Más» ---------------------------------------------- */
+
+.menu {
+  padding: var(--e2);
+}
+
+.menu__fila {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  width: 100%;
+  padding: var(--e3);
+  border: 0;
+  border-radius: var(--radio-m);
+  background: transparent;
+  color: var(--tinta);
+  font-family: inherit;
+  font-size: var(--t-base);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 140ms var(--curva);
+}
+
+.menu__fila + .menu__fila {
+  box-shadow: 0 -1px 0 var(--linea);
+}
+
+.menu__icono {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radio-s);
+  background: var(--hundido);
+  color: var(--tinta);
+}
+
+.menu__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.menu__rotulo {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.menu__apoyo {
+  font-size: var(--t-peque);
+  color: var(--tinta-suave);
+}
+
+.menu__flecha {
+  flex: none;
+  color: var(--tinta-suave);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .menu__fila:hover {
+    background: var(--hundido);
+  }
+}
+
+.menu__fila:active {
+  background: var(--hundido-fuerte);
+}
+
+/* --- Dedos, no punteros ------------------------------------------------------- */
+
+/* El suelo de 44 px no es un adorno: por debajo se falla el objetivo y se
+   corrige, y corregir en un formulario largo es lo que hace que una herramienta
+   se sienta hostil en el teléfono. Va por tipo de puntero, no por ancho de
+   pantalla: un portátil con pantalla táctil también tiene dedos. */
+@media (pointer: coarse) {
+  /* Arrastrar una tarjeta exige `touch-action: none`, y eso deja la página sin
+     poder desplazarse con el dedo. El cambio no compensa en ninguna pantalla
+     táctil, tenga el ancho que tenga: el estado se cambia desde el proyecto. */
+  .proyecto {
+    touch-action: auto;
+  }
+
+  .boton {
+    min-height: 44px;
+  }
+
+  .boton--pequeno {
+    min-height: 38px;
+    padding: 0 14px;
+  }
+
+  .boton--icono {
+    min-width: 44px;
+  }
+
+  /* Por debajo de 16 px, iOS amplía la página al enfocar un campo y la deja
+     torcida. El escalón de 17 de la propia escala cumple el mínimo y encima se
+     lee mejor con el teléfono en la mano. */
+  .campo {
+    min-height: 46px;
+    font-size: var(--t-medio);
+  }
+
+  .buscador {
+    height: 46px;
+  }
+
+  /* El campo no llenaba su píldora: tocar el hueco de arriba o de abajo no
+     hacía nada, aunque pareciera parte del buscador. */
+  .buscador input {
+    align-self: stretch;
+    font-size: var(--t-medio);
+  }
+
+  .segmento,
+  .filtro {
+    min-height: 38px;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  /* Los cuatro estados tienen que caber juntos en 390 px: el que se sale es
+     siempre ENTREGADO, y ese es justo el que se pulsa al cerrar un trabajo.
+     El objetivo táctil lo da la altura, no el ancho. */
+  .estado {
+    min-height: 38px;
+    padding-left: 11px;
+    padding-right: 11px;
+  }
+
+  .tarea__asa,
+  .tarea__quitar,
+  .buscador__limpiar {
+    min-width: 34px;
+    min-height: 34px;
+  }
+
+  .casilla {
+    min-height: 40px;
+  }
+
+  /*
+   * Una pastilla de filtro de 44 px de alto convierte una tira secundaria en una
+   * franja gorda encima del contenido. La forma se queda en 38 y el objetivo
+   * crece por debajo, invisible, hasta los 44 que necesita un pulgar. Crece
+   * sólo a lo alto: a lo ancho pisaría a la pastilla de al lado.
+   */
+  .filtro,
+  .segmento,
+  .estado,
+  .boton--pequeno,
+  .tarea__asa,
+  .tarea__quitar,
+  .buscador__limpiar {
+    position: relative;
+  }
+
+  .filtro::after,
+  .segmento::after,
+  .estado::after,
+  .boton--pequeno::after,
+  .tarea__asa::after,
+  .tarea__quitar::after,
+  .buscador__limpiar::after {
+    content: '';
+    position: absolute;
+    inset: -5px 0;
+  }
+
+  .tarea__asa::after,
+  .tarea__quitar::after,
+  .buscador__limpiar::after {
+    inset: -5px;
+  }
+}
+
+/* --- Hasta 900 px: la lateral se va y manda la barra de abajo ------------------ */
+
+@media (max-width: 900px) {
+  .lateral {
+    display: none;
+  }
+
+  .barra-inferior {
+    display: flex;
+  }
+
+  .marco {
+    /* Sitio para la barra flotante, más el hueco de la barra de gestos. */
+    padding-bottom: calc(74px + max(var(--e3), env(safe-area-inset-bottom)));
+  }
+
+  /* En una lista larga de cuatro estados apilados, saber en cuál estás sin
+     volver a subir vale más que el par de píxeles que cuesta. */
+  .columna__cabecera {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin: 0 calc(var(--e3) * -1);
+    padding: var(--e2) var(--e3) var(--e2);
+    background: var(--fondo);
+  }
+
+  .titulo-pagina {
+    font-size: var(--t-titulo);
+  }
+
+  /* «Arrastra un proyecto para cambiarlo de estado» es mentira aquí: el
+     arrastre está desactivado justo para no bloquear el desplazamiento. */
+  .cabecera__texto p {
+    display: none;
+  }
+
+  .detalle__cabecera p.apoyo,
+  .cabecera__texto p.apoyo--siempre {
+    display: block;
+  }
+}
+
+/* --- Hasta 640 px: una sola columna en todo lo que aún eran dos ---------------- */
+
+@media (max-width: 640px) {
+  /* Hasta aquí caben dos columnas de tarjeta legibles; por debajo, no. */
+  .tablero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .marco {
+    padding: var(--e2);
+    padding-bottom: calc(74px + max(var(--e3), env(safe-area-inset-bottom)));
+  }
+
+  /* Dos campos por fila a 390 px deja 170 px por campo: «Dirección de Medi…». */
+  .detalle__par {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Las etiquetas se van a una sola línea que se desliza. Envueltas ocupaban
+     dos filas fijas por encima del contenido en cada vista. */
+  .filtros {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    margin: 0 calc(var(--e2) * -1);
+    padding-left: var(--e2);
+    padding-right: var(--e2);
+    scroll-padding-inline: var(--e2);
+  }
+
+  .filtros::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filtros > * {
+    flex: none;
+    scroll-snap-align: start;
+  }
+
+  .cabecera {
+    gap: var(--e3);
+  }
+
+  .cabecera__acciones {
+    gap: var(--e2);
+  }
+}
+
 /* --- Editor de cotizaciones -------------------------------------------------- */
+
+/* En el escritorio el formulario y la hoja conviven: escribes a la izquierda y
+   lo ves a la derecha. En un teléfono eso son cuatro mil píxeles de formulario
+   y luego una hoja A4 ilegible al fondo, con el botón de descarga enterrado
+   debajo. Ahí se enseña una cosa cada vez. */
+.editor__pestanas {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .editor__pestanas {
+    display: flex;
+    justify-content: center;
+  }
+
+  .editor__pestanas .segmentos {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .editor__pestanas .segmento {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .editor[data-pestana='datos'] .previsualizacion,
+  .editor[data-pestana='documento'] .editor__formulario {
+    display: none;
+  }
+}
 
 .editor {
   display: grid;

@@ -32,10 +32,16 @@ los borra de un clic cuando metas los tuyos.
   con autocompletado de la gente que ya aparece: aquí no hay entidad «equipo».
 - **Cotizaciones.** Documentos con folio, alcance por componentes con sus entregables,
   inversión en pesos (con IVA opcional), notas destacadas y condiciones. Se editan con la hoja
-  A4 al lado, actualizándose mientras escribes, y se exportan a PDF desde el propio navegador.
-  Cada una se emite **con la marca DIABOLICAL** (banda negra con el logotipo) o **como
-  particular** (sólo el nombre de quien firma, sin rastro de la agencia). *Nueva versión*
-  duplica la cotización subiendo el folio a V2, V3…
+  A4 al lado, actualizándose mientras escribes. Cada una se emite **con la marca DIABOLICAL**
+  (banda negra con el logotipo) o **como particular** (sólo el nombre de quien firma, sin
+  rastro de la agencia). *Nueva versión* duplica la cotización subiendo el folio a V2, V3…
+- **El PDF se descarga, no se imprime.** Se arma en el propio navegador: es vectorial, el texto
+  se puede seleccionar y Manrope viaja dentro del archivo. Sin diálogo de imprimir y sin
+  servidor. La librería que lo hace pesa más que toda la aplicación, así que se carga sólo al
+  pulsar el botón: quien entra a mirar no la paga.
+- **Sirve desde el teléfono.** Navegación fija abajo, al alcance del pulgar; formularios en
+  una columna; y el editor de cotizaciones partido en *Datos* y *Documento*, para no bajar
+  cuatro mil píxeles de formulario antes de ver la hoja. No es el escritorio encogido.
 - **La caja sólo cuenta dinero de clientes.** Lo que gastas en producto propio va en su propia
   tarjeta, porque sumarlo mentiría sobre lo que tienes por cobrar.
 - **El resumen** de la derecha suma la cartera. Ninguna cifra va sola: cada total lleva la

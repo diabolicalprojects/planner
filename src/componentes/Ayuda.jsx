@@ -1,3 +1,10 @@
+import {
+  ArrowSquareOut,
+  CaretRight,
+  Info,
+  Keyboard,
+  UploadSimple,
+} from '@phosphor-icons/react'
 import { Boton, Tarjeta } from './base.jsx'
 
 const ATAJOS = [
@@ -11,7 +18,36 @@ const ATAJOS = [
   ['Alt + ↑ ↓', 'Subir o bajar la tarea enfocada'],
 ]
 
-export default function Ayuda({ tipo, volver }) {
+export default function Ayuda({ tipo, volver, irA, alExportar, alImportar }) {
+  // El menú de la pestaña «Más» del teléfono. En la barra lateral del escritorio
+  // estas mismas entradas están siempre a la vista; aquí son una página, porque
+  // en un teléfono no cabe una barra lateral permanente.
+  if (tipo === 'mas') {
+    const filas = [
+      { rotulo: 'Exportar JSON', apoyo: 'Baja toda la cartera a un archivo', Icono: ArrowSquareOut, hacer: alExportar },
+      { rotulo: 'Importar JSON', apoyo: 'Devuelve una copia a esta máquina', Icono: UploadSimple, hacer: alImportar },
+      { rotulo: 'Atajos', apoyo: 'Cómo usarlo con teclado', Icono: Keyboard, hacer: () => irA({ vista: 'atajos' }) },
+      { rotulo: 'Acerca de', apoyo: 'Qué es esto y dónde viven tus datos', Icono: Info, hacer: () => irA({ vista: 'acerca' }) },
+    ]
+
+    return (
+      <Tarjeta className="menu aparece">
+        {filas.map(({ rotulo, apoyo, Icono, hacer }) => (
+          <button type="button" className="menu__fila" key={rotulo} onClick={hacer}>
+            <span className="menu__icono">
+              <Icono size={19} />
+            </span>
+            <span className="menu__texto">
+              <span className="menu__rotulo">{rotulo}</span>
+              <span className="menu__apoyo">{apoyo}</span>
+            </span>
+            <CaretRight size={15} weight="bold" className="menu__flecha" />
+          </button>
+        ))}
+      </Tarjeta>
+    )
+  }
+
   if (tipo === 'atajos') {
     return (
       <Tarjeta className="aparece">

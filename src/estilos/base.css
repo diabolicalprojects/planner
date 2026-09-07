@@ -388,7 +388,10 @@ select {
 
 .campo--area {
   min-height: 104px;
-  resize: vertical;
+  /* El campo se estira solo con lo que se escribe: dejar además el tirador
+     sería prometer un alto que la siguiente tecla deshace. */
+  resize: none;
+  overflow: hidden;
   font-weight: 500;
   line-height: 1.55;
 }
@@ -502,11 +505,16 @@ select {
   overflow: hidden;
 }
 
+/* Se estira con `transform`, no con `width`: animar el ancho obliga al
+   navegador a recalcular la maquetación en cada fotograma, y en un teléfono
+   modesto con seis barras a la vista eso se nota. La curva no cambia. El radio
+   lo pone el carril, que recorta: heredarlo aquí lo deformaría al escalar. */
 .avance__relleno {
   height: 100%;
-  border-radius: inherit;
+  width: 100%;
   background: var(--negro);
-  transition: width 320ms var(--curva);
+  transform-origin: left center;
+  transition: transform 320ms var(--curva);
 }
 
 .oculto {

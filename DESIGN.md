@@ -170,6 +170,9 @@ vez: aguanta bien los pesos altos de los titulares y no pierde legibilidad a 12p
   columna de importes baile al cambiar un número.
 - **Nada de versalitas encima de un titular.** Los rótulos en mayúscula etiquetan campos y
   columnas del panel lateral, nunca hacen de antetítulo.
+- **En pantalla táctil los campos suben al escalón de 17px.** No es una licencia: por debajo de
+  16px iOS amplía la página al enfocar un campo y la deja torcida. El escalón de la propia
+  escala cumple el mínimo y encima se lee mejor con el teléfono en la mano.
 
 ## Layout
 
@@ -177,13 +180,33 @@ Rejilla de dos niveles: barra lateral de 232px y zona principal; dentro de la pr
 flexible y raíl de 296px. Separación de 16px y relleno de 16px en el marco.
 
 - **≥1400px:** tablero de cuatro columnas junto al raíl.
-- **≤1400px:** el tablero baja a dos columnas.
+- **≤1400px:** el tablero baja a dos columnas; el editor de cotizaciones deja de partirse en
+  formulario y hoja.
 - **≤1180px:** el raíl deja de estar al lado y pasa debajo, en dos columnas; el detalle del
   proyecto pasa a una sola columna.
-- **≤900px:** la barra lateral se convierte en una banda horizontal arriba, el tablero pasa a
-  una columna y el buscador se lleva su propia línea.
+- **≤900px:** la barra lateral desaparece y manda la barra inferior; el buscador se lleva su
+  propia línea, las cabeceras de columna del tablero se pegan arriba y el editor de
+  cotizaciones enseña una cosa cada vez, Datos o Documento.
+- **≤640px:** el tablero pasa a una columna, los pares de campos se apilan, las etiquetas de
+  filtro se van a un carril que se desliza y las pastillas de estado bajan de renglón antes
+  que esconderse.
 
 El raíl es `sticky`; la barra lateral también, a altura completa de ventana.
+
+### El teléfono no es el escritorio encogido
+
+Dos decisiones de fondo, no de tamaño:
+
+- **La navegación baja.** La barra lateral negra es una pieza de escritorio. Apilada arriba se
+  comía un tercio de la pantalla y se iba con el desplazamiento: para cambiar de vista había
+  que subir del todo primero. Abajo y fija cae donde llega el pulgar y no se mueve nunca.
+- **La hoja A4 y su formulario dejan de convivir.** En un teléfono eso son cuatro mil píxeles
+  de formulario y luego un documento ilegible al fondo, con el botón de descarga enterrado
+  debajo. Un conmutador enseña uno u otro; el botón viaja con el documento, que es donde se
+  mira antes de mandarlo.
+
+La aplicación llega hasta el borde (`viewport-fit=cover`) y los bordes seguros los reparte el
+CSS con `env()`: la barra inferior nunca se mete debajo de la barra de gestos.
 
 ## Elevation & Depth
 
@@ -242,12 +265,26 @@ Barra lateral negra permanente. Sustituye a una barra de menús: lo que antes ha
 desplegar para encontrar, ahora se ve siempre. El activo se invierte a blanco sobre negro. Cada
 vista lleva su cuenta en un distintivo a la derecha.
 
+**Barra inferior** (≤900px). El mismo objeto negro de esquinas redondeadas, en horizontal,
+flotando sobre el contenido con tope de 460px para que en una tableta no quede estirado.
+Cuatro pestañas: Tablero, Proyectos, Cotizaciones y Más. La inversión que marca lo activo se
+aplica a escala de icono —pastilla blanca detrás del glifo, rótulo en blanco—, porque una
+pastilla con rótulo dentro no cabe cuatro veces en 360px. Sin cuentas: la cifra vive en la
+página, no en la pestaña.
+
+**Más** es una página, no un desplegable: exportar, importar, atajos y acerca de, en filas
+altas con icono, rótulo y una línea de apoyo. En el escritorio esas entradas ya están siempre
+a la vista en la lateral.
+
 ### Forms
 
 Rótulo en versalitas encima, campo debajo, pista debajo del campo. Nunca marcador de posición
 como etiqueta. El campo enfocado toma el borde negro y un halo de 3px al 8%.
 
 El importe lleva el signo `$` fuera del campo, para que lo que se teclea sea sólo la cifra.
+
+Las áreas de texto crecen con lo que se escribe. Con alto fijo, una nota de cinco líneas se
+lee por una mirilla de tres, y en un teléfono eso hace el campo inservible.
 
 ### Data display
 
@@ -267,6 +304,13 @@ que lo explica.
 
 **No**
 
+- Dejar un objetivo táctil por debajo de 44px. La forma puede quedarse en 38 —una tira de
+  filtros de 44 es una franja gorda encima del contenido—, pero entonces el área crece por
+  debajo, invisible, y sólo a lo alto: a lo ancho pisaría al vecino.
+- Esconder tras un deslizamiento una opción que hay que ver para elegir. Cuatro estados
+  excluyentes bajan de renglón; las etiquetas, que son abiertas y secundarias, sí se deslizan.
+- Bloquear el desplazamiento táctil para permitir un arrastre. En pantalla táctil el arrastre
+  del tablero se desactiva y el estado se cambia desde el proyecto.
 - Introducir un color, ni siquiera para los errores: la marca es monocroma.
 - Anidar tarjetas con sombra dentro de tarjetas con sombra.
 - Usar opacidad para apagar texto en vez del siguiente nivel de tinta.

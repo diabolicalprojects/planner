@@ -24,7 +24,9 @@ Herramienta personal, no colaborativa: cero cuentas, cero nube, cero sincronizac
 
 ## Operating Context
 
-Uso de escritorio, sesiones cortas y frecuentes (revisar por la mañana, actualizar estado tras una llamada de cliente, marcar tareas al cerrar el día). Vista principal: tablero por estado tipo Kanban con las columnas Idea · En curso · Pausado · Entregado, donde la tarjeta se arrastra de columna para cambiar de estado.
+Escritorio y teléfono, sesiones cortas y frecuentes (revisar por la mañana, actualizar estado tras una llamada de cliente, marcar tareas al cerrar el día). El usuario pidió expresamente poder **cotizar y planificar desde el celular**: fuera de la oficina, de pie y con una mano, justo después de una reunión.
+
+Vista principal: tablero por estado tipo Kanban con las columnas Idea · En curso · Pausado · Entregado, donde la tarjeta se arrastra de columna para cambiar de estado. En pantalla táctil el arrastre se desactiva —exige bloquear el desplazamiento del dedo, y ese cambio no compensa— y el estado se cambia desde el propio proyecto, a dos toques.
 
 ## Capabilities and Constraints
 
@@ -36,9 +38,13 @@ Uso de escritorio, sesiones cortas y frecuentes (revisar por la mañana, actuali
   en producto propio se suma aparte: mezclarlas mentiría sobre lo que hay por cobrar.
 - Campos por proyecto: nombre, cliente, estado, fecha de inicio, fecha de entrega; presupuesto e indicador de cobrado/pendiente; lista de tareas con check y progreso calculado; notas libres, enlace (web/repo) y etiquetas.
 - Módulo de cotizaciones: documento con folio versionado, alcance por componentes con sus
-  entregables, inversión en pesos con IVA opcional, notas destacadas y condiciones. Se exporta
-  a PDF de una página A4 desde el navegador, y se emite con la marca de la agencia o como
-  particular. El mismo nodo que se ve en pantalla es el que se imprime.
+  entregables, inversión en pesos con IVA opcional, notas destacadas y condiciones. Se emite
+  con la marca de la agencia o como particular.
+- El PDF se **descarga directamente**, sin pasar por el diálogo de imprimir: se arma en el
+  propio navegador, es vectorial, el texto se puede seleccionar y la tipografía viaja dentro
+  del archivo. La librería que lo hace pesa más que la aplicación entera, así que se carga sólo
+  al pulsar el botón. Cuántas hojas ocupa se lee del PDF ya hecho, no de la vista previa: la
+  previa es HTML y no corta por donde corta el PDF.
 - Las tareas de un proyecto se ordenan a mano: el orden de la lista es el orden de prioridad.
 - Cada tarea puede tener una persona responsable (texto libre con autocompletado; no existe
   una entidad «equipo» en el producto).
@@ -47,6 +53,8 @@ Uso de escritorio, sesiones cortas y frecuentes (revisar por la mañana, actuali
 - Exportar e importar toda la base como archivo `.json`.
 - Persistencia doble según dónde corra: Postgres cuando hay servidor (el despliegue en
   planner.diabolicalservices.tech), `localStorage` cuando no lo hay (`npm run dev`).
+- La interfaz sirve igual en teléfono: navegación en barra inferior fija, formularios en una
+  columna, objetivos táctiles de 44px y el editor de cotizaciones partido en Datos y Documento.
 - Restricciones: sin autenticación y sin multi-usuario. Es la herramienta de una persona.
 - Terminología en español (el usuario escribe y trabaja en español).
 - Toda cifra de dinero está en pesos mexicanos (MXN), con formato `es-MX`.

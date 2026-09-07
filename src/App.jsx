@@ -10,6 +10,7 @@ import {
   X,
 } from '@phosphor-icons/react'
 import Ayuda from './componentes/Ayuda.jsx'
+import BarraInferior from './componentes/BarraInferior.jsx'
 import Cotizacion from './componentes/Cotizacion.jsx'
 import Cotizaciones from './componentes/Cotizaciones.jsx'
 import Detalle from './componentes/Detalle.jsx'
@@ -29,6 +30,7 @@ const TITULOS = {
     titulo: 'Cotizaciones',
     apoyo: 'Documentos con folio, alcance e inversión, listos para exportar a PDF.',
   },
+  mas: { titulo: 'Más', apoyo: 'Tus datos, los atajos y de dónde sale todo esto.' },
   atajos: { titulo: 'Atajos', apoyo: 'Cómo usar el planificador sin tocar el ratón.' },
   acerca: { titulo: 'Acerca de', apoyo: 'Qué es esto y dónde viven tus datos.' },
 }
@@ -214,9 +216,28 @@ export default function App() {
 
   const hayEjemplo = proyectos.some((p) => p.id.startsWith('MUESTRA'))
   const filtrado = Boolean(busqueda || etiquetaActiva || tipoFiltro)
+  const exportarTodo = useCallback(() => {
+    if (!pilaRef.current.length) {
+      setMensaje({ tono: 'error', texto: 'No hay nada que exportar todavía.' })
+      return
+    }
+    setMensaje({
+      tono: 'bien',
+      texto: `Descargado ${exportar({ proyectos: pilaRef.current, cotizaciones: pila.cotizaciones })}.`,
+    })
+  }, [pila.cotizaciones])
+
+  const abrirArchivo = useCallback(() => archivoRef.current?.click(), [])
+
   const cabecera = TITULOS[vista]
   const enTrabajo = vista === 'tablero' || vista === 'lista'
   const enCotizaciones = vista === 'cotizaciones'
+  // El botón principal sólo aparece donde hay algo que dar de alta. En «Más» o
+  // en los atajos no viene a cuento, y dentro de un proyecto o de una cotización
+  // tampoco: ahí la cabecera está para decirte dónde estás, no para sacarte.
+  // En el teléfono, además, era el botón más grande de la pantalla mientras
+  // editabas, a un dedo de perder el sitio.
+  const hayAlta = (enTrabajo || enCotizaciones) && !proyectoAbierto && !cotizacionAbierta
 
   return (
     <div className="marco">
@@ -228,17 +249,8 @@ export default function App() {
           total: proyectos.length,
           cotizaciones: pila.cotizaciones.length,
         }}
-        alExportar={() => {
-          if (!proyectos.length) {
-            setMensaje({ tono: 'error', texto: 'No hay nada que exportar todavía.' })
-            return
-          }
-          setMensaje({
-            tono: 'bien',
-            texto: `Descargado ${exportar({ proyectos, cotizaciones: pila.cotizaciones })}.`,
-          })
-        }}
-        alImportar={() => archivoRef.current?.click()}
+        alExportar={exportarTodo}
+        alImportar={abrirArchivo}
       />
 
       <main className="principal">
@@ -290,7 +302,7 @@ export default function App() {
                 ) : null}
               </div>
             ) : null}
-            {enCotizaciones ? (
+            {!hayAlta ? null : enCotizaciones ? (
               <Boton variante="principal" onClick={nuevaCotizacion}>
                 <Plus size={16} weight="bold" /> Nueva cotización
               </Boton>
@@ -346,7 +358,7 @@ export default function App() {
               </Boton>
             </span>
           </div>
-        ) : hayEjemplo && !proyectoAbierto ? (
+        ) : hayEjemplo && enTrabajo && !proyectoAbierto ? (
           <div className="aviso" role="status">
             <span className="aviso__icono">
               <Sparkle size={16} weight="fill" />
@@ -475,7 +487,13 @@ export default function App() {
                 />
               )
             ) : (
-              <Ayuda tipo={vista} volver={() => irA({ vista: 'tablero' })} />
+              <Ayuda
+                tipo={vista}
+                volver={() => irA({ vista: 'tablero' })}
+                irA={irA}
+                alExportar={exportarTodo}
+                alImportar={abrirArchivo}
+              />
             )}
           </div>
 
@@ -500,6 +518,8 @@ export default function App() {
         onChange={alElegirArchivo}
       />
       <p ref={avisoRef} className="oculto" role="status" aria-live="polite" />
+
+      <BarraInferior vista={vista} irA={irA} />
     </div>
   )
 }

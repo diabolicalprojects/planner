@@ -1,3 +1,5 @@
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
+
 /** Piezas base: tarjeta, botón, campo, casilla, distintivo y barra de avance. */
 
 export function Tarjeta({ as: Etiqueta = 'section', className = '', negra = false, ...resto }) {
@@ -22,8 +24,49 @@ export function Boton({ variante = 'suave', tamano, className = '', type = 'butt
   )
 }
 
+/**
+ * Un área de texto que crece con lo que se escribe.
+ *
+ * Con alto fijo el texto largo se lee por una mirilla de tres renglones: en el
+ * escritorio molesta y en un teléfono, donde una nota de cinco líneas es lo
+ * normal, hace el campo inservible. Aquí no hay barra interior que perseguir,
+ * el campo es tan alto como su contenido.
+ */
+export function AreaCrece({ className = '', ...resto }) {
+  const nodo = useRef(null)
+
+  const ajustar = useCallback(() => {
+    const n = nodo.current
+    if (!n) return
+    n.style.height = 'auto'
+    // Escondido (otra pestaña, otra vista) mide cero: dejarlo así lo aplastaría.
+    if (n.scrollHeight > 0) n.style.height = `${n.scrollHeight}px`
+  }, [])
+
+  useLayoutEffect(ajustar, [ajustar, resto.value])
+
+  // Al cambiar el ancho, el texto se recoloca y cambian los renglones. Se vigila
+  // el contenedor, no el propio campo: vigilarlo a él sería medir lo que uno
+  // mismo acaba de mover.
+  useEffect(() => {
+    const padre = nodo.current?.parentElement
+    if (!padre) return
+    const observador = new ResizeObserver(ajustar)
+    observador.observe(padre)
+    return () => observador.disconnect()
+  }, [ajustar])
+
+  return (
+    <textarea
+      ref={nodo}
+      className={`campo campo--area ${className}`.trim()}
+      onInput={ajustar}
+      {...resto}
+    />
+  )
+}
+
 export function Campo({ etiqueta, pista, id, area = false, className = '', ...resto }) {
-  const Control = area ? 'textarea' : 'input'
   return (
     <div className={`bloque-campo ${className}`.trim()}>
       {etiqueta ? (
@@ -31,7 +74,11 @@ export function Campo({ etiqueta, pista, id, area = false, className = '', ...re
           {etiqueta}
         </label>
       ) : null}
-      <Control id={id} className={`campo ${area ? 'campo--area' : ''}`.trim()} {...resto} />
+      {area ? (
+        <AreaCrece id={id} {...resto} />
+      ) : (
+        <input id={id} className="campo" {...resto} />
+      )}
       {pista ? <p className="pista">{pista}</p> : null}
     </div>
   )
@@ -89,7 +136,7 @@ export function Avance({ fraccion, etiqueta }) {
       aria-valuemax={100}
       aria-label={etiqueta}
     >
-      <div className="avance__relleno" style={{ width: `${porcentaje}%` }} />
+      <div className="avance__relleno" style={{ transform: `scaleX(${porcentaje / 100})` }} />
     </div>
   )
 }

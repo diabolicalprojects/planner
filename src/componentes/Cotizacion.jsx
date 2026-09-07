@@ -9,7 +9,7 @@ import {
   TrashSimple,
   X,
 } from '@phosphor-icons/react'
-import { Boton, Campo, CampoDinero, Tarjeta } from './base.jsx'
+import { AreaCrece, Boton, Campo, CampoDinero, Tarjeta } from './base.jsx'
 import Documento from './Documento.jsx'
 import { descargar } from '../lib/descargar.js'
 import {
@@ -34,6 +34,8 @@ export default function Cotizacion({ cot, proyectos, acciones, volver }) {
   const [altoHoja, setAltoHoja] = useState(ALTO_A4)
   // Sólo se sabe de verdad cuando el PDF existe; hasta entonces no se dice.
   const [paginas, setPaginas] = useState(null)
+  // Sólo manda en pantalla estrecha; en escritorio conviven los dos paneles.
+  const [pestana, setPestana] = useState('datos')
   const lienzo = useRef(null)
   const escenario = useRef(null)
   const vivo = useRef(true)
@@ -49,33 +51,39 @@ export default function Cotizacion({ cot, proyectos, acciones, volver }) {
     }
   }, [])
 
-  // La hoja mide 210 mm de verdad; en pantalla se encoge para caber sin que
-  // cambie ni una medida del documento.
+  /**
+   * La hoja mide 210 mm de verdad; en pantalla se encoge para caber sin que
+   * cambie ni una medida del documento. Y se mide de alto para enseñarla
+   * entera: con la altura fijada a una página, lo que se salía quedaba
+   * recortado y no se descubría hasta abrir el PDF, que ya es tarde.
+   *
+   * Las dos medidas las vigila el mismo observador, atento tanto al hueco como
+   * a la hoja. Hace falta: en el teléfono el mirador nace escondido detrás de
+   * la pestaña «Datos», y un elemento escondido mide cero. Sin volver a medir
+   * al aparecer, la hoja salía en blanco.
+   */
+  const medir = useCallback(() => {
+    const ancho = lienzo.current?.clientWidth
+    if (ancho) setEscala(Math.min(1, ancho / ANCHO_A4))
+    const alto = escenario.current?.firstElementChild?.offsetHeight
+    if (alto) setAltoHoja(alto)
+  }, [])
+
   useLayoutEffect(() => {
-    const medir = () => {
-      const ancho = lienzo.current?.clientWidth
-      if (ancho) setEscala(Math.min(1, ancho / ANCHO_A4))
-    }
     medir()
     const observador = new ResizeObserver(medir)
-    if (lienzo.current) observador.observe(lienzo.current)
-    return () => observador.disconnect()
-  }, [])
-
-  // El mirador tiene que enseñar la hoja entera. Con la altura fijada a una
-  // página, lo que se salía quedaba recortado y no se descubría hasta abrir el
-  // PDF, que ya es tarde.
-  const medirAlto = useCallback(() => {
     const hoja = escenario.current?.firstElementChild
-    if (hoja) setAltoHoja(hoja.offsetHeight)
-  }, [])
+    if (lienzo.current) observador.observe(lienzo.current)
+    if (hoja) observador.observe(hoja)
+    return () => observador.disconnect()
+  }, [medir])
 
-  useLayoutEffect(medirAlto, [medirAlto, cot])
+  useLayoutEffect(medir, [medir, cot, pestana])
 
   // La tipografía llega después del primer pintado y mueve los renglones.
   useEffect(() => {
-    document.fonts?.ready.then(medirAlto)
-  }, [medirAlto])
+    document.fonts?.ready.then(medir)
+  }, [medir])
 
   const cambiar = (cambios) => actualizarCotizacion(cot.id, cambios)
   const t = totalesCotizacion(cot)
@@ -132,7 +140,26 @@ export default function Cotizacion({ cot, proyectos, acciones, volver }) {
   const quitarBloque = (id) => cambiar({ bloques: cot.bloques.filter((b) => b.id !== id) })
 
   return (
-    <div className="editor">
+    <div className="editor" data-pestana={pestana}>
+      <div className="editor__pestanas" role="group" aria-label="Qué se enseña">
+        <div className="segmentos">
+          {[
+            ['datos', 'Datos'],
+            ['documento', 'Documento'],
+          ].map(([id, rotulo]) => (
+            <button
+              type="button"
+              key={id}
+              className={`segmento ${pestana === id ? 'segmento--activo' : ''}`.trim()}
+              aria-pressed={pestana === id}
+              onClick={() => setPestana(id)}
+            >
+              {rotulo}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="editor__formulario">
         <Tarjeta className="aparece">
           <header className="detalle__cabecera">
@@ -349,8 +376,7 @@ export default function Cotizacion({ cot, proyectos, acciones, volver }) {
                     </button>
                   </div>
 
-                  <textarea
-                    className="campo campo--area"
+                  <AreaCrece
                     style={{ minHeight: 76 }}
                     value={c.entregables.join('\n')}
                     onChange={(e) =>
@@ -431,8 +457,7 @@ export default function Cotizacion({ cot, proyectos, acciones, volver }) {
                       <X size={13} weight="bold" />
                     </button>
                   </div>
-                  <textarea
-                    className="campo campo--area"
+                  <AreaCrece
                     style={{ minHeight: 70 }}
                     value={b.texto}
                     onChange={(e) => cambiarBloque(b.id, { texto: e.target.value })}
@@ -450,9 +475,8 @@ export default function Cotizacion({ cot, proyectos, acciones, volver }) {
                 <label className="etiqueta-campo" htmlFor="cot-condiciones">
                   Condiciones
                 </label>
-                <textarea
+                <AreaCrece
                   id="cot-condiciones"
-                  className="campo campo--area"
                   value={cot.condiciones.join('\n')}
                   onChange={(e) =>
                     cambiar({ condiciones: e.target.value.split('\n').map((x) => x.trimStart()) })

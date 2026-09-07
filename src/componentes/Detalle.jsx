@@ -88,47 +88,48 @@ export default function Detalle({ proyecto, acciones, volver, gente = [] }) {
               }
             }}
           />
-          <div className="detalle__meta">
-            <div className="estados" role="group" aria-label="Estado del proyecto">
-              {ESTADOS.map((estado) => (
-                <button
-                  type="button"
-                  key={estado.id}
-                  className={`estado ${proyecto.estado === estado.id ? 'estado--activo' : ''}`.trim()}
-                  aria-pressed={proyecto.estado === estado.id}
-                  onClick={() => actualizar(proyecto.id, { estado: estado.id })}
-                >
-                  {rotuloEstado(estado.id, proyecto.tipo)}
-                </button>
-              ))}
-            </div>
-
-            <div className="estados" role="group" aria-label="Tipo de proyecto">
-              {TIPOS.map((tipo) => (
-                <button
-                  type="button"
-                  key={tipo.id}
-                  className={`estado ${proyecto.tipo === tipo.id ? 'estado--activo' : ''}`.trim()}
-                  aria-pressed={proyecto.tipo === tipo.id}
-                  onClick={() => actualizar(proyecto.id, { tipo: tipo.id })}
-                >
-                  {tipo.id === 'interno' ? <RocketLaunch size={13} weight="fill" /> : null}
-                  {tipo.rotulo}
-                </button>
-              ))}
-            </div>
-
-            {tarde ? (
-              <Chip variante="negro">
-                {interno ? 'Lanzamiento pasado hace' : 'Vencido hace'} {Math.abs(dias)} d
-              </Chip>
-            ) : null}
-          </div>
         </div>
-
         <Boton variante="icono" className="detalle__cerrar" onClick={volver} aria-label="Volver al tablero">
           <ArrowLeft size={17} weight="bold" />
         </Boton>
+
+        <div className="detalle__meta">
+          <div className="estados" role="group" aria-label="Estado del proyecto">
+            {ESTADOS.map((estado) => (
+              <button
+                type="button"
+                key={estado.id}
+                className={`estado ${proyecto.estado === estado.id ? 'estado--activo' : ''}`.trim()}
+                aria-pressed={proyecto.estado === estado.id}
+                onClick={() => actualizar(proyecto.id, { estado: estado.id })}
+              >
+                {rotuloEstado(estado.id, proyecto.tipo)}
+              </button>
+            ))}
+          </div>
+
+          <div className="estados" role="group" aria-label="Tipo de proyecto">
+            {TIPOS.map((tipo) => (
+              <button
+                type="button"
+                key={tipo.id}
+                className={`estado ${proyecto.tipo === tipo.id ? 'estado--activo' : ''}`.trim()}
+                aria-pressed={proyecto.tipo === tipo.id}
+                onClick={() => actualizar(proyecto.id, { tipo: tipo.id })}
+              >
+                {tipo.id === 'interno' ? <RocketLaunch size={13} weight="fill" /> : null}
+                {tipo.rotulo}
+              </button>
+            ))}
+          </div>
+
+          {tarde ? (
+            <Chip variante="negro">
+              {interno ? 'Lanzamiento pasado hace' : 'Vencido hace'} {Math.abs(dias)} d
+            </Chip>
+          ) : null}
+        </div>
+
       </header>
 
       <div className="detalle__cuerpo">
