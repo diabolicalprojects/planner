@@ -2,12 +2,46 @@
 // cuando corre sin servidor. Es el único sitio donde vive ese dato, así que no
 // hay dos versiones que se puedan desincronizar.
 
+import { readFile } from 'node:fs/promises'
 import { proyectosDeEjemplo } from '../src/data/ejemplo.js'
+import { sanear } from '../src/lib/modelo.js'
 import { aplicarEsquema, cuantosProyectos, escribirProyectos, pool } from './base.js'
 
+/**
+ * De dónde salen los proyectos de la semilla, en orden de preferencia:
+ *
+ *   1. SEMILLA_JSON     — el JSON entero en una variable de entorno.
+ *   2. SEMILLA_ARCHIVO  — la ruta a un .json dentro del contenedor.
+ *   3. los ejemplos     — lo que trae el repositorio.
+ *
+ * Las dos primeras existen para poder sembrar datos reales sin escribirlos
+ * nunca en el repositorio: las variables de entorno del servidor son privadas,
+ * el código fuente no tiene por qué serlo.
+ */
+async function proyectosDeLaSemilla() {
+  const crudo = process.env.SEMILLA_JSON
+    ? process.env.SEMILLA_JSON
+    : process.env.SEMILLA_ARCHIVO
+      ? await readFile(process.env.SEMILLA_ARCHIVO, 'utf8')
+      : null
+
+  if (!crudo) return { proyectos: proyectosDeEjemplo(), origen: 'los ejemplos del repositorio' }
+
+  const datos = JSON.parse(crudo)
+  const lista = Array.isArray(datos) ? datos : datos?.proyectos
+  if (!Array.isArray(lista)) {
+    throw new Error('La semilla no contiene una lista de proyectos.')
+  }
+  return {
+    proyectos: lista.map(sanear),
+    origen: process.env.SEMILLA_JSON ? 'SEMILLA_JSON' : process.env.SEMILLA_ARCHIVO,
+  }
+}
+
 export async function sembrar() {
-  const proyectos = proyectosDeEjemplo()
+  const { proyectos, origen } = await proyectosDeLaSemilla()
   await escribirProyectos(proyectos)
+  console.log(`[semilla] ${proyectos.length} proyectos desde ${origen}.`)
   return proyectos.length
 }
 
