@@ -433,10 +433,18 @@
   .aviso,
   .filtros,
   .lateral,
+  .barra-inferior,
   .raíl,
   .editor__formulario,
+  .editor__pestanas,
   .previsualizacion__barra {
     display: none !important;
+  }
+
+  /* En pantalla estrecha el mirador puede estar escondido tras la pestaña
+     «Datos». Imprimir desde ahí sacaba una hoja en blanco. */
+  .previsualizacion {
+    display: block !important;
   }
 
   .marco,

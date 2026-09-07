@@ -1822,6 +1822,16 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  /* Con 11 px de relleno los cuatro estados suman 320,7 sobre 321 disponibles en
+     un teléfono de 390: cabían por tres décimas, y eso no es caber. Cualquier
+     diferencia de trazado partía el selector en dos renglones en un teléfono y
+     en uno en el de al lado. Con 9 aguantan de una pieza hasta los 337 px; por
+     debajo bajan de renglón, que para eso está el reparto de arriba. */
+  .estado {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
   .marco {
     padding: var(--e2);
     padding-bottom: calc(74px + max(var(--e3), env(safe-area-inset-bottom)));
