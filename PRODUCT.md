@@ -35,6 +35,10 @@ Uso de escritorio, sesiones cortas y frecuentes (revisar por la mañana, actuali
 - La caja (presupuestado, cobrado, pendiente) cuenta SÓLO proyectos de cliente. La inversión
   en producto propio se suma aparte: mezclarlas mentiría sobre lo que hay por cobrar.
 - Campos por proyecto: nombre, cliente, estado, fecha de inicio, fecha de entrega; presupuesto e indicador de cobrado/pendiente; lista de tareas con check y progreso calculado; notas libres, enlace (web/repo) y etiquetas.
+- Módulo de cotizaciones: documento con folio versionado, alcance por componentes con sus
+  entregables, inversión en pesos con IVA opcional, notas destacadas y condiciones. Se exporta
+  a PDF de una página A4 desde el navegador, y se emite con la marca de la agencia o como
+  particular. El mismo nodo que se ve en pantalla es el que se imprime.
 - Las tareas de un proyecto se ordenan a mano: el orden de la lista es el orden de prioridad.
 - Cada tarea puede tener una persona responsable (texto libre con autocompletado; no existe
   una entidad «equipo» en el producto).

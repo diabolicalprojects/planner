@@ -30,6 +30,12 @@ los borra de un clic cuando metas los tuyos.
 - **Las tareas llevan responsable.** Un disco con las iniciales en cada tarea, y los discos
   apilados en la tarjeta del tablero para ver de un vistazo quién anda en qué. Es texto libre
   con autocompletado de la gente que ya aparece: aquí no hay entidad «equipo».
+- **Cotizaciones.** Documentos con folio, alcance por componentes con sus entregables,
+  inversión en pesos (con IVA opcional), notas destacadas y condiciones. Se editan con la hoja
+  A4 al lado, actualizándose mientras escribes, y se exportan a PDF desde el propio navegador.
+  Cada una se emite **con la marca DIABOLICAL** (banda negra con el logotipo) o **como
+  particular** (sólo el nombre de quien firma, sin rastro de la agencia). *Nueva versión*
+  duplica la cotización subiendo el folio a V2, V3…
 - **La caja sólo cuenta dinero de clientes.** Lo que gastas en producto propio va en su propia
   tarjeta, porque sumarlo mentiría sobre lo que tienes por cobrar.
 - **El resumen** de la derecha suma la cartera. Ninguna cifra va sola: cada total lleva la

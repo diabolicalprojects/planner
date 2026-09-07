@@ -10,6 +10,8 @@ import {
   X,
 } from '@phosphor-icons/react'
 import Ayuda from './componentes/Ayuda.jsx'
+import Cotizacion from './componentes/Cotizacion.jsx'
+import Cotizaciones from './componentes/Cotizaciones.jsx'
 import Detalle from './componentes/Detalle.jsx'
 import Lateral from './componentes/Lateral.jsx'
 import Lista from './componentes/Lista.jsx'
@@ -23,6 +25,10 @@ import { usarProyectos } from './lib/usarProyectos.js'
 const TITULOS = {
   tablero: { titulo: 'Tablero', apoyo: 'Arrastra un proyecto para cambiarlo de estado.' },
   lista: { titulo: 'Proyectos', apoyo: 'Toda la cartera en una tabla, ordenable por cualquier columna.' },
+  cotizaciones: {
+    titulo: 'Cotizaciones',
+    apoyo: 'Documentos con folio, alcance e inversión, listos para exportar a PDF.',
+  },
   atajos: { titulo: 'Atajos', apoyo: 'Cómo usar el planificador sin tocar el ratón.' },
   acerca: { titulo: 'Acerca de', apoyo: 'Qué es esto y dónde viven tus datos.' },
 }
@@ -33,6 +39,7 @@ export default function App() {
 
   const [vista, setVista] = useState('tablero')
   const [abierto, setAbierto] = useState(null)
+  const [cotAbierta, setCotAbierta] = useState(null)
   const [busqueda, setBusqueda] = useState('')
   const [etiquetaActiva, setEtiquetaActiva] = useState(null)
   const [tipoFiltro, setTipoFiltro] = useState(null)
@@ -48,6 +55,7 @@ export default function App() {
 
   const irA = useCallback(({ vista: destino }) => {
     setAbierto(null)
+    setCotAbierta(null)
     setVista(destino)
   }, [])
 
@@ -152,7 +160,7 @@ export default function App() {
   }
 
   function aplicarImportacion(resultado, nombreArchivo) {
-    pila.reemplazar(resultado.proyectos)
+    pila.reemplazar({ proyectos: resultado.proyectos, cotizaciones: resultado.cotizaciones })
     setAbierto(null)
     setVista('tablero')
     setMensaje({
@@ -178,23 +186,57 @@ export default function App() {
     })
   }
 
+  const cotizacionAbierta = cotAbierta
+    ? pila.cotizaciones.find((c) => c.id === cotAbierta)
+    : null
+
+  const nuevaCotizacion = useCallback(() => {
+    // La cotización nace ya firmada por quien firmó la última: se cambia en un
+    // clic, pero lo normal es que sea la misma persona.
+    const ultima = pila.cotizaciones[0]
+    const cot = pila.crearCotizacion({
+      marca: ultima?.marca ?? 'diabolical',
+      emisorNombre: ultima?.emisorNombre ?? '',
+      emisorTitulo: ultima?.emisorTitulo ?? '',
+      emisorContacto: ultima?.emisorContacto ?? '',
+    })
+    setVista('cotizaciones')
+    setCotAbierta(cot.id)
+  }, [pila])
+
+  const duplicarCot = useCallback(
+    (original) => {
+      const copia = pila.duplicarCotizacion(original)
+      setCotAbierta(copia.id)
+    },
+    [pila],
+  )
+
   const hayEjemplo = proyectos.some((p) => p.id.startsWith('MUESTRA'))
   const filtrado = Boolean(busqueda || etiquetaActiva || tipoFiltro)
   const cabecera = TITULOS[vista]
   const enTrabajo = vista === 'tablero' || vista === 'lista'
+  const enCotizaciones = vista === 'cotizaciones'
 
   return (
     <div className="marco">
       <Lateral
         vista={vista}
         irA={irA}
-        cuantos={{ activos: proyectos.filter((p) => p.estado !== 'entregado').length, total: proyectos.length }}
+        cuantos={{
+          activos: proyectos.filter((p) => p.estado !== 'entregado').length,
+          total: proyectos.length,
+          cotizaciones: pila.cotizaciones.length,
+        }}
         alExportar={() => {
           if (!proyectos.length) {
             setMensaje({ tono: 'error', texto: 'No hay nada que exportar todavía.' })
             return
           }
-          setMensaje({ tono: 'bien', texto: `Descargado ${exportar(proyectos)}.` })
+          setMensaje({
+            tono: 'bien',
+            texto: `Descargado ${exportar({ proyectos, cotizaciones: pila.cotizaciones })}.`,
+          })
         }}
         alImportar={() => archivoRef.current?.click()}
       />
@@ -203,18 +245,24 @@ export default function App() {
         <header className="cabecera">
           <div className="cabecera__texto">
             <h1 className="titulo-pagina">
-              {proyectoAbierto
-                ? proyectoAbierto.tipo === 'interno'
-                  ? 'Producto propio'
-                  : 'Proyecto'
-                : cabecera.titulo}
+              {cotizacionAbierta
+                ? 'Cotización'
+                : proyectoAbierto
+                  ? proyectoAbierto.tipo === 'interno'
+                    ? 'Producto propio'
+                    : 'Proyecto'
+                  : cabecera.titulo}
             </h1>
             <p>
-              {proyectoAbierto
-                ? proyectoAbierto.tipo === 'interno'
-                  ? 'Sin cliente: lo lanzamos nosotros'
-                  : proyectoAbierto.cliente || 'Sin cliente'
-                : cabecera.apoyo}
+              {cotizacionAbierta
+                ? `${cotizacionAbierta.folio} · ${
+                    cotizacionAbierta.marca === 'diabolical' ? 'con marca DIABOLICAL' : 'como particular'
+                  }`
+                : proyectoAbierto
+                  ? proyectoAbierto.tipo === 'interno'
+                    ? 'Sin cliente: lo lanzamos nosotros'
+                    : proyectoAbierto.cliente || 'Sin cliente'
+                  : cabecera.apoyo}
             </p>
           </div>
 
@@ -242,9 +290,15 @@ export default function App() {
                 ) : null}
               </div>
             ) : null}
-            <Boton variante="principal" onClick={nuevoProyecto}>
-              <Plus size={16} weight="bold" /> Nuevo proyecto
-            </Boton>
+            {enCotizaciones ? (
+              <Boton variante="principal" onClick={nuevaCotizacion}>
+                <Plus size={16} weight="bold" /> Nueva cotización
+              </Boton>
+            ) : (
+              <Boton variante="principal" onClick={nuevoProyecto}>
+                <Plus size={16} weight="bold" /> Nuevo proyecto
+              </Boton>
+            )}
           </div>
         </header>
 
@@ -355,7 +409,7 @@ export default function App() {
           </div>
         ) : null}
 
-        <div className="trabajo">
+        <div className={`trabajo ${enTrabajo ? '' : 'trabajo--solo'}`.trim()}>
           <div className="lienzo">
             {pila.cargando ? (
               <Tarjeta>
@@ -404,6 +458,22 @@ export default function App() {
               />
             ) : vista === 'lista' ? (
               <Lista visibles={visibles} abrir={abrir} />
+            ) : enCotizaciones ? (
+              cotizacionAbierta ? (
+                <Cotizacion
+                  cot={cotizacionAbierta}
+                  proyectos={proyectos}
+                  acciones={{ ...pila, duplicarCotizacion: duplicarCot }}
+                  volver={() => setCotAbierta(null)}
+                />
+              ) : (
+                <Cotizaciones
+                  cotizaciones={pila.cotizaciones}
+                  proyectos={proyectos}
+                  abrir={setCotAbierta}
+                  crear={nuevaCotizacion}
+                />
+              )
             ) : (
               <Ayuda tipo={vista} volver={() => irA({ vista: 'tablero' })} />
             )}

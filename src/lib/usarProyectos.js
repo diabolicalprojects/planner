@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { cargar, detectarModo, guardar, modoActual } from './almacen.js'
-import { nuevoId, proyectoEnBlanco, sanear } from './modelo.js'
+import { cotizacionEnBlanco, nuevoId, proyectoEnBlanco, sanear, sanearCotizacion } from './modelo.js'
 import { proyectosDeEjemplo } from '../data/ejemplo.js'
 
 /**
@@ -10,6 +10,7 @@ import { proyectosDeEjemplo } from '../data/ejemplo.js'
  */
 export function usarProyectos() {
   const [proyectos, setProyectos] = useState([])
+  const [cotizaciones, setCotizaciones] = useState([])
   const [cargando, setCargando] = useState(true)
   const [modo, setModo] = useState(null)
   const [guardadoEn, setGuardadoEn] = useState(null)
@@ -26,10 +27,12 @@ export function usarProyectos() {
         // Sin servidor y sin nada guardado es la primera vez: se enseñan los
         // ejemplos. Con servidor, una base vacía es una base vacía y punto: no
         // se le meten datos inventados a nadie.
-        setProyectos(guardados ?? (cual === 'api' ? [] : proyectosDeEjemplo()))
+        setProyectos(guardados?.proyectos ?? (cual === 'api' ? [] : proyectosDeEjemplo()))
+        setCotizaciones(guardados?.cotizaciones ?? [])
       } catch {
         if (!vivo) return
         setProyectos([])
+        setCotizaciones([])
         setFalloAlGuardar(true)
       } finally {
         if (!vivo) return
@@ -48,12 +51,12 @@ export function usarProyectos() {
   useEffect(() => {
     if (!listoParaGuardar.current) return
     const id = setTimeout(async () => {
-      const bien = await guardar(proyectos)
+      const bien = await guardar({ proyectos, cotizaciones })
       setFalloAlGuardar(!bien)
       if (bien) setGuardadoEn(Date.now())
     }, 400)
     return () => clearTimeout(id)
-  }, [proyectos])
+  }, [proyectos, cotizaciones])
 
   const crear = useCallback((parcial = {}) => {
     const ficha = { ...proyectoEnBlanco(), ...parcial }
@@ -92,7 +95,56 @@ export function usarProyectos() {
     return copia
   }, [])
 
-  const reemplazar = useCallback((lista) => setProyectos(lista.map(sanear)), [])
+  const reemplazar = useCallback(({ proyectos: ps, cotizaciones: cs }) => {
+    setProyectos((ps ?? []).map(sanear))
+    setCotizaciones((cs ?? []).map(sanearCotizacion))
+  }, [])
+
+  /* --- Cotizaciones ------------------------------------------------------ */
+
+  const crearCotizacion = useCallback((parcial = {}) => {
+    const cot = { ...cotizacionEnBlanco(), ...parcial }
+    setCotizaciones((lista) => [cot, ...lista])
+    return cot
+  }, [])
+
+  const actualizarCotizacion = useCallback((id, cambios) => {
+    setCotizaciones((lista) =>
+      lista.map((c) =>
+        c.id === id ? { ...c, ...cambios, actualizado: new Date().toISOString() } : c,
+      ),
+    )
+  }, [])
+
+  const borrarCotizacion = useCallback((id) => {
+    setCotizaciones((lista) => lista.filter((c) => c.id !== id))
+  }, [])
+
+  /**
+   * Duplicar una cotización sube la versión y renueva el folio: una cotización
+   * v2 es un documento distinto que el cliente tiene que poder distinguir del
+   * que ya le mandaste.
+   */
+  const duplicarCotizacion = useCallback((original) => {
+    const version = (original.version || 1) + 1
+    const copia = sanearCotizacion({
+      ...original,
+      id: nuevoId(),
+      version,
+      folio: String(original.folio || '').replace(/V\d+$/, `V${version}`) || original.folio,
+      estado: 'borrador',
+      creado: new Date().toISOString(),
+      actualizado: new Date().toISOString(),
+      componentes: original.componentes.map((c) => ({ ...c, id: nuevoId() })),
+      bloques: original.bloques.map((b) => ({ ...b, id: nuevoId() })),
+    })
+    setCotizaciones((lista) => {
+      const pos = lista.findIndex((c) => c.id === original.id)
+      if (pos === -1) return [copia, ...lista]
+      return [...lista.slice(0, pos + 1), copia, ...lista.slice(pos + 1)]
+    })
+    return copia
+  }, [])
 
   const anadirTarea = useCallback((id, texto) => {
     const limpio = texto.trim()
@@ -146,6 +198,11 @@ export function usarProyectos() {
 
   return {
     proyectos,
+    cotizaciones,
+    crearCotizacion,
+    actualizarCotizacion,
+    borrarCotizacion,
+    duplicarCotizacion,
     cargando,
     modo: modo ?? modoActual(),
     guardadoEn,
@@ -160,6 +217,9 @@ export function usarProyectos() {
     moverTarea,
     borrarTarea,
     cargarEjemplo: () => setProyectos(proyectosDeEjemplo()),
-    vaciar: () => setProyectos([]),
+    vaciar: () => {
+      setProyectos([])
+      setCotizaciones([])
+    },
   }
 }

@@ -75,12 +75,98 @@ export async function leerProyectos() {
   }))
 }
 
+export async function leerCotizaciones() {
+  const { rows } = await pool.query('SELECT * FROM cotizaciones ORDER BY creado DESC')
+  return rows.map((f) => ({
+    id: f.id,
+    folio: f.folio,
+    version: f.version,
+    estado: f.estado,
+    marca: f.marca,
+    emisorNombre: f.emisor_nombre,
+    emisorTitulo: f.emisor_titulo,
+    emisorContacto: f.emisor_contacto,
+    cliente: f.cliente,
+    proyecto: f.proyecto,
+    atencion: f.atencion,
+    ubicacion: f.ubicacion,
+    fecha: aISO(f.fecha),
+    plazo: f.plazo,
+    validez: f.validez,
+    componentes: f.componentes ?? [],
+    bloques: f.bloques ?? [],
+    condiciones: f.condiciones ?? [],
+    totalManual: f.total_manual,
+    conIva: f.con_iva,
+    notas: f.notas,
+    proyectoId: f.proyecto_id,
+    creado: f.creado?.toISOString?.() ?? String(f.creado),
+    actualizado: f.actualizado?.toISOString?.() ?? String(f.actualizado),
+  }))
+}
+
+/** Todo lo que guarda la app, en una sola lectura. */
+export async function leerDatos() {
+  const [proyectos, cotizaciones] = await Promise.all([leerProyectos(), leerCotizaciones()])
+  return { proyectos, cotizaciones }
+}
+
+async function escribirCotizacionesEn(cliente, cotizaciones) {
+  await cliente.query('DELETE FROM cotizaciones')
+  for (const c of cotizaciones) {
+    await cliente.query(
+      `INSERT INTO cotizaciones
+         (id, folio, version, estado, marca, emisor_nombre, emisor_titulo, emisor_contacto,
+          cliente, proyecto, atencion, ubicacion, fecha, plazo, validez,
+          componentes, bloques, condiciones, total_manual, con_iva, notas, proyecto_id,
+          creado, actualizado)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
+               $16::jsonb,$17::jsonb,$18::jsonb,$19,$20,$21,$22,
+               COALESCE($23::timestamptz, now()), now())`,
+      [
+        c.id,
+        c.folio ?? '',
+        Number.isFinite(Number(c.version)) ? Math.max(1, Math.trunc(c.version)) : 1,
+        ['borrador', 'enviada', 'aprobada', 'rechazada'].includes(c.estado) ? c.estado : 'borrador',
+        c.marca === 'particular' ? 'particular' : 'diabolical',
+        c.emisorNombre ?? '',
+        c.emisorTitulo ?? '',
+        c.emisorContacto ?? '',
+        c.cliente ?? '',
+        c.proyecto ?? '',
+        c.atencion ?? '',
+        c.ubicacion ?? '',
+        c.fecha || null,
+        c.plazo ?? '',
+        c.validez ?? '',
+        JSON.stringify(c.componentes ?? []),
+        JSON.stringify(c.bloques ?? []),
+        JSON.stringify(c.condiciones ?? []),
+        Number.isFinite(Number(c.totalManual)) ? Math.max(0, Math.trunc(c.totalManual)) : 0,
+        Boolean(c.conIva),
+        c.notas ?? '',
+        c.proyectoId ?? '',
+        c.creado || null,
+      ],
+    )
+  }
+}
+
 /**
  * Sustituye la cartera entera dentro de una transacción. Esta app es de una
  * sola persona y la interfaz ya trabaja con la lista completa; hacerlo en un
  * golpe atómico es más simple y no deja estados a medias.
  */
 export async function escribirProyectos(proyectos) {
+  return escribirDatos({ proyectos, cotizaciones: null })
+}
+
+/**
+ * Escribe proyectos y cotizaciones en una sola transacción. Pasar `null` en
+ * cotizaciones deja esa tabla como está: así la semilla y el endpoint viejo
+ * siguen funcionando sin borrar documentos.
+ */
+export async function escribirDatos({ proyectos, cotizaciones }) {
   const cliente = await pool.connect()
   try {
     await cliente.query('BEGIN')
@@ -119,6 +205,8 @@ export async function escribirProyectos(proyectos) {
         )
       }
     }
+
+    if (cotizaciones) await escribirCotizacionesEn(cliente, cotizaciones)
 
     await cliente.query('COMMIT')
     return proyectos.length

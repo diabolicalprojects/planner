@@ -1,0 +1,493 @@
+/* ===========================================================================
+   La hoja de cotización. Lo que se ve en pantalla es el mismo nodo que sale
+   impreso: no hay una vista para mirar y otra para exportar, que es como se
+   acaba enviando un PDF distinto del que aprobaste.
+   =========================================================================== */
+
+.hoja {
+  --hoja-ancho: 210mm;
+  --hoja-margen: 14mm;
+
+  width: var(--hoja-ancho);
+  min-height: 297mm;
+  padding: var(--hoja-margen);
+  background: #fff;
+  color: var(--tinta);
+  font-size: 9.5pt;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  /* Medido: con este contenido la hoja pedía 309 mm y se iba a una segunda
+     página por 12 mm. El ritmo vertical se ajusta para que una cotización
+     normal quepa en una; si crece de verdad, que fluya. */
+  gap: 5.5mm;
+  box-shadow: var(--sombra-alta);
+  border-radius: 2px;
+}
+
+/* --- Cabecera --------------------------------------------------------------- */
+
+.hoja__cabecera {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8mm;
+}
+
+.hoja--marca .hoja__cabecera {
+  margin: calc(var(--hoja-margen) * -1) calc(var(--hoja-margen) * -1) 0;
+  padding: 9mm var(--hoja-margen) 7mm;
+  background: var(--negro);
+  color: #fff;
+}
+
+.hoja__marca img {
+  display: block;
+  height: 11mm;
+  width: auto;
+}
+
+.hoja__emisor-alto {
+  min-width: 0;
+}
+
+.hoja__emisor-nombre {
+  font-size: 15pt;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.hoja__emisor-titulo {
+  margin-top: 1mm;
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tinta-media);
+}
+
+.hoja__titulo {
+  text-align: right;
+  flex: none;
+}
+
+.hoja__tipo {
+  font-size: 15pt;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.hoja__folio {
+  margin-top: 1mm;
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+}
+
+.hoja--marca .hoja__folio {
+  color: var(--sobre-negro-suave);
+}
+
+.hoja--particular .hoja__folio {
+  color: var(--tinta-media);
+}
+
+.hoja--particular .hoja__cabecera {
+  padding-bottom: 5mm;
+  border-bottom: 2px solid var(--tinta);
+}
+
+/* --- Rótulos y datos --------------------------------------------------------- */
+
+.hoja__rotulo {
+  font-size: 7pt;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tinta-media);
+  margin-bottom: 2.5mm;
+}
+
+.hoja__datos {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 8mm;
+}
+
+.hoja__cliente {
+  font-size: 12pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.hoja__linea {
+  margin-top: 1.5mm;
+  font-size: 9pt;
+}
+
+.hoja__linea span {
+  display: inline-block;
+  min-width: 19mm;
+  font-weight: 700;
+  color: var(--tinta-media);
+}
+
+.hoja__ficha {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.2mm 5mm;
+  font-size: 9pt;
+}
+
+.hoja__ficha dt {
+  font-weight: 700;
+  color: var(--tinta-media);
+}
+
+.hoja__ficha dd {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Tabla de alcance --------------------------------------------------------- */
+
+.hoja__tabla {
+  width: 100%;
+  border-collapse: collapse;
+  /* Sin esto el reparto automático le da a la primera columna el doble de lo
+     que pide y los entregables se quedan sin sitio. */
+  table-layout: fixed;
+}
+
+.hoja__tabla th {
+  padding: 0 0 2mm;
+  border-bottom: 1.5px solid var(--tinta);
+  font-size: 7pt;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--tinta-media);
+}
+
+.hoja__tabla td {
+  padding: 3mm 0;
+  border-bottom: 1px solid var(--linea);
+  vertical-align: top;
+}
+
+.hoja__tabla th:first-child,
+.hoja__tabla td:first-child {
+  width: 38mm;
+  padding-right: 5mm;
+}
+
+/* Sólo la tercera columna es la del importe. Con :last-child, cuando no hay
+   importes la regla caía sobre los entregables y les robaba el ancho. */
+.hoja__tabla th:nth-child(3),
+.hoja__tabla td:nth-child(3) {
+  width: 26mm;
+  padding-left: 4mm;
+}
+
+.hoja__derecha {
+  text-align: right;
+}
+
+.hoja__componente {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.hoja__importe {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.hoja__entregables {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4mm;
+}
+
+.hoja__entregables li {
+  position: relative;
+  padding-left: 4mm;
+}
+
+/* Viñeta dibujada: un cuadro pequeño, no el punto del navegador. */
+.hoja__entregables li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1.55mm;
+  width: 1.4mm;
+  height: 1.4mm;
+  background: var(--tinta);
+}
+
+.hoja__vacio {
+  color: var(--tinta-suave);
+}
+
+/* --- Totales ------------------------------------------------------------------- */
+
+.hoja__totales {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.hoja__suma {
+  min-width: 78mm;
+}
+
+.hoja__suma p {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6mm;
+  padding: 1.5mm 0;
+  font-size: 9pt;
+}
+
+.hoja__suma p span {
+  color: var(--tinta-media);
+}
+
+.hoja__suma b {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.hoja__total {
+  margin-top: 1.5mm;
+  padding: 3.5mm 4mm !important;
+  background: var(--negro);
+  color: #fff;
+  border-radius: 2mm;
+}
+
+.hoja__total span {
+  color: rgba(255, 255, 255, 0.72) !important;
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hoja__total b {
+  font-size: 15pt;
+  letter-spacing: -0.03em;
+}
+
+.hoja__total small {
+  font-size: 8pt;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+/* --- Notas laterales y condiciones ---------------------------------------------- */
+
+.hoja__notas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5mm;
+}
+
+.hoja__nota {
+  padding: 4mm;
+  background: var(--hundido);
+  border-radius: 2mm;
+}
+
+.hoja__nota-texto {
+  font-size: 8.5pt;
+  white-space: pre-line;
+}
+
+.hoja__condiciones ul {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6mm;
+  font-size: 8.5pt;
+}
+
+.hoja__condiciones li {
+  position: relative;
+  padding-left: 4mm;
+}
+
+.hoja__condiciones li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1.4mm;
+  width: 1.4mm;
+  height: 1.4mm;
+  background: var(--tinta);
+}
+
+/* --- Pie ------------------------------------------------------------------------ */
+
+.hoja__pie {
+  margin-top: auto;
+  padding-top: 4mm;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8mm;
+}
+
+.hoja__raya-firma {
+  display: block;
+  width: 62mm;
+  border-top: 1px solid var(--tinta);
+  margin-bottom: 2mm;
+}
+
+.hoja__firmante {
+  font-size: 10pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.hoja__cargo {
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tinta-media);
+}
+
+.hoja__contacto {
+  margin-top: 1mm;
+  font-size: 8.5pt;
+  color: var(--tinta-media);
+}
+
+.hoja__sello {
+  display: flex;
+  align-items: center;
+  gap: 2.5mm;
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--tinta-media);
+  text-align: right;
+}
+
+.hoja__sello img {
+  display: block;
+}
+
+.hoja__sello b {
+  font-weight: 800;
+  color: var(--tinta);
+}
+
+/* ===========================================================================
+   Pantalla: la hoja se encoge para caber en el panel sin cambiar de medidas.
+   =========================================================================== */
+
+.previsualizacion {
+  position: sticky;
+  top: var(--e4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--e3);
+  min-width: 0;
+}
+
+.previsualizacion__lienzo {
+  overflow: hidden;
+  border-radius: var(--radio-m);
+}
+
+.previsualizacion__escala {
+  transform-origin: top left;
+}
+
+/* ===========================================================================
+   Impresión: fuera todo lo que no sea la hoja.
+   =========================================================================== */
+
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff;
+  }
+
+  /* Se oculta la aplicación entera y se saca la hoja del panel encogido. */
+  .marco > *:not(.principal),
+  .cabecera,
+  .aviso,
+  .filtros,
+  .lateral,
+  .raíl,
+  .editor__formulario,
+  .previsualizacion__barra {
+    display: none !important;
+  }
+
+  .marco,
+  .principal,
+  .trabajo,
+  .lienzo,
+  .editor,
+  .previsualizacion,
+  .previsualizacion__lienzo {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    gap: 0 !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    position: static !important;
+    box-shadow: none !important;
+    background: none !important;
+  }
+
+  /* El lienzo lleva una altura en linea calculada para la vista encogida: si
+     se queda, imprime una banda vacia detras de la hoja. */
+  .previsualizacion__lienzo,
+  .previsualizacion__escala {
+    transform: none !important;
+    width: auto !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .hoja {
+    width: 210mm;
+    min-height: 297mm;
+    box-shadow: none;
+    border-radius: 0;
+    break-inside: auto;
+  }
+
+  /* Que no se parta una fila del alcance entre dos páginas. */
+  .hoja__tabla tr,
+  .hoja__nota,
+  .hoja__totales,
+  .hoja__pie {
+    break-inside: avoid;
+  }
+
+  /* El navegador quita los fondos por defecto y la banda negra desaparecería. */
+  .hoja--marca .hoja__cabecera,
+  .hoja__total,
+  .hoja__nota,
+  .hoja__entregables li::before,
+  .hoja__condiciones li::before {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

@@ -1,8 +1,9 @@
 import {
   ArrowSquareOut,
+  FileText,
   Info,
-  Keyboard,
   Kanban,
+  Keyboard,
   ListBullets,
   UploadSimple,
 } from '@phosphor-icons/react'
@@ -10,6 +11,7 @@ import {
 const VISTAS = [
   { id: 'tablero', etiqueta: 'Tablero', Icono: Kanban },
   { id: 'lista', etiqueta: 'Proyectos', Icono: ListBullets },
+  { id: 'cotizaciones', etiqueta: 'Cotizaciones', Icono: FileText },
 ]
 
 const AYUDA = [
@@ -56,6 +58,7 @@ export default function Lateral({ vista, irA, cuantos, alExportar, alImportar })
         <p className="lateral__rotulo">Cartera</p>
         {fila(VISTAS[0], cuantos.activos)}
         {fila(VISTAS[1], cuantos.total)}
+        {fila(VISTAS[2], cuantos.cotizaciones)}
       </nav>
 
       <div className="lateral__grupo lateral__grupo--pie">

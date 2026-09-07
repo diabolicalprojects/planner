@@ -8,7 +8,8 @@ import { fileURLToPath } from 'node:url'
 import {
   aplicarEsquema,
   cuantosProyectos,
-  escribirProyectos,
+  escribirDatos,
+  leerDatos,
   leerProyectos,
   pool,
 } from './base.js'
@@ -90,17 +91,27 @@ const servidor = createServer(async (req, res) => {
       return responder(res, 200, { ok: true, base: 'postgres' })
     }
 
-    if (ruta === '/api/proyectos' && req.method === 'GET') {
-      return responder(res, 200, { proyectos: await leerProyectos() })
+    // Todo lo que guarda la app, de una vez: la interfaz trabaja con la
+    // colección entera y así el guardado es una sola transacción.
+    if (ruta === '/api/datos' && req.method === 'GET') {
+      return responder(res, 200, await leerDatos())
     }
 
-    if (ruta === '/api/proyectos' && req.method === 'PUT') {
+    if (ruta === '/api/datos' && req.method === 'PUT') {
       const cuerpo = await leerCuerpo(req)
       if (!cuerpo || !Array.isArray(cuerpo.proyectos)) {
-        return responder(res, 400, { error: 'Se esperaba { proyectos: [...] }.' })
+        return responder(res, 400, { error: 'Se esperaba { proyectos: [...], cotizaciones: [...] }.' })
       }
-      const guardados = await escribirProyectos(cuerpo.proyectos)
+      const guardados = await escribirDatos({
+        proyectos: cuerpo.proyectos,
+        cotizaciones: Array.isArray(cuerpo.cotizaciones) ? cuerpo.cotizaciones : [],
+      })
       return responder(res, 200, { ok: true, guardados })
+    }
+
+    // Se mantiene por compatibilidad: hay copias y scripts que apuntan aquí.
+    if (ruta === '/api/proyectos' && req.method === 'GET') {
+      return responder(res, 200, { proyectos: await leerProyectos() })
     }
 
     if (ruta.startsWith('/api/')) {

@@ -298,6 +298,12 @@
 
 /* --- Rejilla de trabajo ---------------------------------------------------- */
 
+/* Sin raíl no se reserva su columna: si no, el editor de cotizaciones se queda
+   con 300px de ancho para nada. */
+.trabajo--solo {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
 .trabajo {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 296px;
@@ -1482,5 +1488,109 @@
 
   .lista__fila > .lista__oculto-movil {
     display: none;
+  }
+}
+
+/* --- Editor de cotizaciones -------------------------------------------------- */
+
+.editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--e4);
+  align-items: start;
+}
+
+.editor__formulario {
+  min-width: 0;
+}
+
+.editor__cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e5);
+  padding: 0 var(--e5) var(--e5);
+}
+
+.editor__seccion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e3);
+}
+
+.editor__titulo {
+  font-size: var(--t-medio);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.editor__cabecera-seccion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e2);
+}
+
+.editor__pie {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  flex-wrap: wrap;
+  padding: var(--e4) var(--e5);
+  border-top: 1px solid var(--linea);
+}
+
+.componente {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e2);
+  padding: var(--e3);
+  border-radius: var(--radio-m);
+  background: var(--hundido);
+}
+
+.componente__barra {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+}
+
+.componente__mover {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
+.componente__titulo {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.previsualizacion__barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e2);
+}
+
+@media (max-width: 1400px) {
+  .editor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .previsualizacion {
+    position: static;
+  }
+}
+
+/* La lista de cotizaciones lleva una columna más que la de proyectos. */
+.lista__fila--cot {
+  grid-template-columns: minmax(0, 2fr) 118px 118px 92px 118px;
+}
+
+@media (max-width: 900px) {
+  .lista__fila--cot {
+    grid-template-columns: minmax(0, 1fr) 110px;
   }
 }

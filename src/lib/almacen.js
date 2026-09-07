@@ -6,7 +6,7 @@
 //
 // En los dos casos los datos salen enteros a un .json cuando quieras.
 
-import { sanear } from './modelo.js'
+import { sanear, sanearCotizacion } from './modelo.js'
 
 const CLAVE = 'diabolical.planificador.v1'
 const FORMATO = 'diabolical-planificador'
@@ -41,12 +41,21 @@ export function modoActual() {
   return modo
 }
 
+/** Normaliza lo que venga de donde venga: servidor, navegador o archivo. */
+function ordenar(datos) {
+  return {
+    proyectos: Array.isArray(datos?.proyectos) ? datos.proyectos.map(sanear) : [],
+    cotizaciones: Array.isArray(datos?.cotizaciones)
+      ? datos.cotizaciones.map(sanearCotizacion)
+      : [],
+  }
+}
+
 export async function cargar() {
   if ((await detectarModo()) === 'api') {
-    const res = await fetch('/api/proyectos')
-    if (!res.ok) throw new Error('No se pudo leer la cartera del servidor.')
-    const datos = await res.json()
-    return (datos.proyectos ?? []).map(sanear)
+    const res = await fetch('/api/datos')
+    if (!res.ok) throw new Error('No se pudieron leer los datos del servidor.')
+    return ordenar(await res.json())
   }
 
   try {
@@ -54,19 +63,21 @@ export async function cargar() {
     if (!crudo) return null
     const datos = JSON.parse(crudo)
     if (!Array.isArray(datos?.proyectos)) return null
-    return datos.proyectos.map(sanear)
+    return ordenar(datos)
   } catch {
     return null
   }
 }
 
-export async function guardar(proyectos) {
+export async function guardar(datos) {
+  const cuerpo = { proyectos: datos.proyectos ?? [], cotizaciones: datos.cotizaciones ?? [] }
+
   if ((await detectarModo()) === 'api') {
     try {
-      const res = await fetch('/api/proyectos', {
+      const res = await fetch('/api/datos', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ proyectos }),
+        body: JSON.stringify(cuerpo),
       })
       return res.ok
     } catch {
@@ -75,16 +86,22 @@ export async function guardar(proyectos) {
   }
 
   try {
-    localStorage.setItem(CLAVE, JSON.stringify({ formato: FORMATO, version: VERSION, proyectos }))
+    localStorage.setItem(CLAVE, JSON.stringify({ formato: FORMATO, version: VERSION, ...cuerpo }))
     return true
   } catch {
     return false
   }
 }
 
-export function exportar(proyectos) {
+export function exportar({ proyectos, cotizaciones }) {
   const contenido = JSON.stringify(
-    { formato: FORMATO, version: VERSION, exportado: new Date().toISOString(), proyectos },
+    {
+      formato: FORMATO,
+      version: VERSION,
+      exportado: new Date().toISOString(),
+      proyectos,
+      cotizaciones,
+    },
     null,
     2,
   )
@@ -125,6 +142,9 @@ export async function importar(archivo) {
   if (!proyectos.length) {
     return { error: 'El archivo no tiene ningún proyecto con nombre o cliente.' }
   }
+  const cotizaciones = Array.isArray(datos?.cotizaciones)
+    ? datos.cotizaciones.map(sanearCotizacion)
+    : []
   // Decir cuántos se cayeron: callarlo es mentir sobre lo que se importó.
-  return { proyectos, descartados: saneados.length - proyectos.length }
+  return { proyectos, cotizaciones, descartados: saneados.length - proyectos.length }
 }

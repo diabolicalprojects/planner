@@ -251,3 +251,150 @@ export function totales(proyectos) {
     vencidos: proyectos.filter(vencido),
   }
 }
+
+/* ===========================================================================
+   Cotizaciones
+   =========================================================================== */
+
+export const ESTADOS_COT = [
+  { id: 'borrador', rotulo: 'BORRADOR' },
+  { id: 'enviada', rotulo: 'ENVIADA' },
+  { id: 'aprobada', rotulo: 'APROBADA' },
+  { id: 'rechazada', rotulo: 'RECHAZADA' },
+]
+
+export const ESTADO_COT_IDS = ESTADOS_COT.map((e) => e.id)
+
+export function rotuloEstadoCot(id) {
+  return ESTADOS_COT.find((e) => e.id === id)?.rotulo ?? 'BORRADOR'
+}
+
+/** Con marca de la casa o como particular: la misma cotización, dos caras. */
+export const MARCAS = [
+  { id: 'diabolical', rotulo: 'DIABOLICAL' },
+  { id: 'particular', rotulo: 'Particular' },
+]
+
+export const IVA = 0.16
+
+/** COT-2026-0907-V1 — el mismo formato que ya venías usando. */
+export function nuevoFolio(fecha = new Date(), version = 1) {
+  const a = fecha.getFullYear()
+  const m = String(fecha.getMonth() + 1).padStart(2, '0')
+  const d = String(fecha.getDate()).padStart(2, '0')
+  return `COT-${a}-${m}${d}-V${version}`
+}
+
+export function cotizacionEnBlanco() {
+  const hoy = new Date()
+  return {
+    id: nuevoId(),
+    folio: nuevoFolio(hoy),
+    version: 1,
+    estado: 'borrador',
+    marca: 'diabolical',
+
+    // Quién la emite. En modo particular es lo único que aparece arriba.
+    emisorNombre: '',
+    emisorTitulo: '',
+    emisorContacto: '',
+
+    // A quién va.
+    cliente: '',
+    proyecto: '',
+    atencion: '',
+    ubicacion: '',
+
+    fecha: hoyISO(),
+    plazo: '',
+    validez: '15 días hábiles',
+
+    componentes: [],
+    bloques: [],
+    condiciones: [],
+
+    // Si ningún componente lleva importe, manda éste.
+    totalManual: 0,
+    conIva: false,
+    notas: '',
+
+    // Enlace opcional con un proyecto de la cartera.
+    proyectoId: '',
+
+    creado: hoy.toISOString(),
+    actualizado: hoy.toISOString(),
+  }
+}
+
+export function sanearCotizacion(bruto) {
+  const base = cotizacionEnBlanco()
+  if (!bruto || typeof bruto !== 'object') return base
+  const texto = (v, max) => String(v ?? '').slice(0, max)
+  const numero = (v) => {
+    const n = Number(v)
+    return Number.isFinite(n) && n >= 0 ? Math.trunc(n) : 0
+  }
+  return {
+    ...base,
+    ...bruto,
+    id: typeof bruto.id === 'string' && bruto.id ? bruto.id : base.id,
+    folio: texto(bruto.folio, 40) || base.folio,
+    version: numero(bruto.version) || 1,
+    estado: ESTADO_COT_IDS.includes(bruto.estado) ? bruto.estado : 'borrador',
+    marca: bruto.marca === 'particular' ? 'particular' : 'diabolical',
+    emisorNombre: texto(bruto.emisorNombre, 80),
+    emisorTitulo: texto(bruto.emisorTitulo, 80),
+    emisorContacto: texto(bruto.emisorContacto, 160),
+    cliente: texto(bruto.cliente, 120),
+    proyecto: texto(bruto.proyecto, 160),
+    atencion: texto(bruto.atencion, 120),
+    ubicacion: texto(bruto.ubicacion, 120),
+    fecha: fechaValida(bruto.fecha) ? bruto.fecha : base.fecha,
+    plazo: texto(bruto.plazo, 80),
+    validez: texto(bruto.validez, 80),
+    componentes: Array.isArray(bruto.componentes)
+      ? bruto.componentes.slice(0, 40).map((c) => ({
+          id: typeof c?.id === 'string' && c.id ? c.id : nuevoId(),
+          titulo: texto(c?.titulo, 120),
+          importe: numero(c?.importe),
+          entregables: Array.isArray(c?.entregables)
+            ? c.entregables.slice(0, 20).map((e) => texto(e, 400)).filter(Boolean)
+            : [],
+        }))
+      : [],
+    bloques: Array.isArray(bruto.bloques)
+      ? bruto.bloques.slice(0, 8).map((b) => ({
+          id: typeof b?.id === 'string' && b.id ? b.id : nuevoId(),
+          titulo: texto(b?.titulo, 80),
+          texto: texto(b?.texto, 800),
+        }))
+      : [],
+    condiciones: Array.isArray(bruto.condiciones)
+      ? bruto.condiciones.slice(0, 20).map((c) => texto(c, 500)).filter(Boolean)
+      : [],
+    totalManual: numero(bruto.totalManual),
+    conIva: Boolean(bruto.conIva),
+    notas: texto(bruto.notas, 2000),
+    proyectoId: texto(bruto.proyectoId, 40),
+  }
+}
+
+/**
+ * Los números de la cotización. Si algún componente lleva importe, el total
+ * sale de la suma y el campo manual deja de mandar: dos fuentes de verdad para
+ * la misma cifra es como se acaba enviando un documento que no cuadra.
+ */
+export function totalesCotizacion(cot) {
+  const sumaComponentes = cot.componentes.reduce((s, c) => s + (c.importe || 0), 0)
+  const desglosado = sumaComponentes > 0
+  const subtotal = desglosado ? sumaComponentes : cot.totalManual
+  const iva = cot.conIva ? Math.round(subtotal * IVA) : 0
+  return { desglosado, subtotal, iva, total: subtotal + iva }
+}
+
+const FECHA_LARGA = new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })
+
+export function fechaLarga(fechaISO) {
+  if (!fechaValida(fechaISO)) return ''
+  return FECHA_LARGA.format(new Date(`${fechaISO}T00:00:00`))
+}
