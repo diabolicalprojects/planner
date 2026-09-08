@@ -10,7 +10,7 @@
 import { createInterface } from 'node:readline'
 import { randomBytes } from 'node:crypto'
 
-import { hashClave } from './sesion.js'
+import { hashClave, verificarClave } from './sesion.js'
 
 /*
  * Leer una contraseña por consola es más frágil de lo que parece, y en Windows
@@ -151,6 +151,39 @@ function abortar(motivo) {
   console.error(`\n${motivo}\n`)
   lineas?.close()
   process.exit(1)
+}
+
+/*
+ * Modo comprobación: `npm run clave -- --probar`.
+ *
+ * Sirve para cuando el login dice que no y no se sabe de qué lado está el
+ * problema. Se teclea la contraseña y se pega el hash que hay en el servidor, y
+ * dice si abren la misma puerta. Todo aquí, sin red: si coinciden, la
+ * contraseña es buena y lo que falla está en el navegador; si no coinciden, la
+ * que se está tecleando no es la que se firmó.
+ */
+if (process.argv.includes('--probar')) {
+  const suya = await preguntar('Contraseña que quieres comprobar: ')
+  const hash = await preguntar('Pega aquí el CLAVE_HASH del servidor: ')
+  const bien = await verificarClave(suya, hash.trim())
+  if (bien) {
+    console.log(
+      '\n  SÍ: esa contraseña abre ese hash.' +
+        '\n  Entonces el problema no está en la contraseña. Sospecha del navegador:' +
+        '\n  borra el campo del todo antes de escribir, por si te está rellenando la' +
+        '\n  contraseña vieja que tiene guardada, y prueba en una ventana privada.' +
+        '\n',
+    )
+  } else {
+    console.log(
+      '\n  NO: esa contraseña no abre ese hash.' +
+        '\n  La que estás tecleando no es la que se firmó. Genera otra con' +
+        '\n  `npm run clave` y dime las dos líneas: las pongo y despliego.' +
+        '\n',
+    )
+  }
+  lineas?.close()
+  process.exit(bien ? 0 : 1)
 }
 
 const clave = await preguntar('Contraseña de acceso: ')

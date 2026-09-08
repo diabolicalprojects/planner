@@ -22,10 +22,24 @@ const R = 8
 const P = 1
 const LARGO = 64
 
+/**
+ * La contraseña, siempre igual antes de tocarla.
+ *
+ * Las dos puntas —la que firma y la que comprueba— tienen que preparar el texto
+ * de la misma manera o no se reconocen nunca. Y hasta ahora no lo hacían: el
+ * script de generación recortaba los espacios de los extremos y el servidor no,
+ * así que una contraseña con un espacio de más al final firmaba una cosa y
+ * comprobaba otra. Un espacio al final no se ve, no se recuerda y en un teléfono
+ * lo pone el corrector solo.
+ *
+ * Por eso vive aquí y no en quien llama: un solo sitio, imposible que se separen.
+ */
+const preparar = (clave) => String(clave).normalize('NFKC').trim()
+
 /** Devuelve la cadena que se guarda en la variable de entorno. */
 export async function hashClave(clave) {
   const sal = randomBytes(32)
-  const llave = await derivar(clave.normalize('NFKC'), sal, LARGO, { N, r: R, p: P })
+  const llave = await derivar(preparar(clave), sal, LARGO, { N, r: R, p: P })
   return ['scrypt', N, R, P, sal.toString('base64'), llave.toString('base64')].join('$')
 }
 
@@ -38,7 +52,7 @@ export async function verificarClave(clave, guardado) {
     const [tipo, n, r, p, salB64, llaveB64] = String(guardado).split('$')
     if (tipo !== 'scrypt') return false
     const esperada = Buffer.from(llaveB64, 'base64')
-    const calculada = await derivar(clave.normalize('NFKC'), Buffer.from(salB64, 'base64'), esperada.length, {
+    const calculada = await derivar(preparar(clave), Buffer.from(salB64, 'base64'), esperada.length, {
       N: Number(n),
       r: Number(r),
       p: Number(p),

@@ -126,6 +126,17 @@ Si te importa, ejecútalo en PowerShell: `node servidor/clave.js`. La contraseñ
 argumentos —que quedan en el historial del intérprete y en la lista de procesos— ni se guarda
 en ningún archivo. Lo que se copia es el hash, que no sirve para entrar.
 
+Si el acceso no te deja entrar y no sabes de qué lado está el problema:
+
+```bash
+npm run clave -- --probar
+```
+
+Tecleas la contraseña, pegas el `CLAVE_HASH` que hay en el servidor y te dice si abren la misma
+puerta. Todo en tu máquina, sin red. Si coinciden, sospecha del navegador —rellenado automático
+de una contraseña vieja guardada, sobre todo—; si no coinciden, la que estás tecleando no es la
+que se firmó.
+
 Sin `CLAVE_HASH`, el servidor arranca pero **la API contesta 503 a todo**. Es a propósito:
 antes de esto la API estaba abierta y cualquiera que supiera la dirección podía leerse o
 borrarse la cartera entera. Fallar con un error claro es mejor que servir sin candado.
