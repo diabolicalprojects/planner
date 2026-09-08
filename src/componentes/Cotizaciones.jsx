@@ -45,10 +45,12 @@ export default function Cotizaciones({ cotizaciones, proyectos, abrir, crear }) 
             onClick={() => abrir(c.id)}
           >
             <span className="lista__proyecto">
-              <span className="lista__nombre">{c.cliente || 'Sin cliente'}</span>
+              <span className="lista__nombre">{c.cliente || c.proyecto || 'Sin nombre'}</span>
               <span className="lista__cliente">
                 {c.folio}
-                {c.proyecto ? ` · ${c.proyecto}` : ''}
+                {/* Sin cliente, el proyecto ya es el título: repetirlo debajo es
+                    decir dos veces lo mismo en dos renglones seguidos. */}
+                {c.proyecto && c.cliente ? ` · ${c.proyecto}` : ''}
                 {proyecto ? ' · enlazada' : ''}
               </span>
             </span>

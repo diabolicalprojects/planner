@@ -35,6 +35,11 @@ los borra de un clic cuando metas los tuyos.
   A4 al lado, actualizándose mientras escribes. Cada una se emite **con la marca DIABOLICAL**
   (banda negra con el logotipo) o **como particular** (sólo el nombre de quien firma, sin
   rastro de la agencia). *Nueva versión* duplica la cotización subiendo el folio a V2, V3…
+- **El archivo sale con el nombre del cliente delante**, no con el folio:
+  `Agencia de Medios Hidroforum · Lanzamiento de políticz.mx · COT-2026-0907-V1.pdf`. Ordenados
+  por folio, una carpeta de descargas son veinte archivos que empiezan por «COT-2026-» y hay que
+  abrirlos uno a uno para saber cuál es cuál. El folio se queda al final, que es lo único que
+  separa la V1 de la V2 del mismo trabajo.
 - **El PDF se descarga, no se imprime.** Se arma en el propio navegador: es vectorial, el texto
   se puede seleccionar y Manrope viaja dentro del archivo. Sin diálogo de imprimir y sin
   servidor. La librería que lo hace pesa más que toda la aplicación, así que se carga sólo al

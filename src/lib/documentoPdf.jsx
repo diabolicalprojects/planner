@@ -263,6 +263,7 @@ export function HojaPdf({ cot }) {
   const conMarca = cot.marca === 'diabolical'
   const hayImportes = t.desglosado
   const firma = conMarca ? 'DIABOLICAL IA Services' : cot.emisorNombre || 'Cotización'
+  const titulo = [cot.cliente, cot.proyecto].filter(Boolean).join(' · ')
 
   const paraDatos = [
     ['Proyecto', cot.proyecto],
@@ -279,9 +280,11 @@ export function HojaPdf({ cot }) {
 
   return (
     <Document
-      title={`Cotización ${cot.folio}`}
+      // Lo que enseña el visor en la pestaña. Con tres cotizaciones abiertas, el
+      // folio no dice cuál es cuál.
+      title={titulo || `Cotización ${cot.folio}`}
       author={cot.emisorNombre || firma}
-      subject={cot.proyecto || cot.cliente || 'Cotización'}
+      subject={`Cotización ${cot.folio}`}
       creator={firma}
       producer={firma}
     >
@@ -463,16 +466,35 @@ export function HojaPdf({ cot }) {
 
 /* --- Salida ----------------------------------------------------------------- */
 
-/** Un nombre de archivo que sobrevive a Windows, a macOS y al correo. */
+/**
+ * Cómo se llama el archivo.
+ *
+ * Delante va de quién es y de qué va; el folio, al final. Ordenados por folio,
+ * una carpeta de descargas son veinte archivos que empiezan por «COT-2026-» y no
+ * hay manera de distinguirlos sin abrirlos uno a uno. Por cliente se encuentran
+ * de un vistazo, que es como uno los busca de verdad.
+ *
+ * El folio no se va: es lo único que separa la V1 de la V2 del mismo trabajo.
+ */
 export function nombreArchivo(cot) {
-  const limpio = [cot.folio, cot.cliente || cot.proyecto]
-    .filter(Boolean)
-    .join(' · ')
-    .replace(/[\\/:*?"<>|]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 90)
-  return `${limpio || 'Cotizacion'}.pdf`
+  const limpio = (texto) =>
+    String(texto ?? '')
+      .replace(/[\\/:*?"<>|]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+
+  // Cliente y proyecto se recortan juntos: los dos enteros pueden dar un nombre
+  // que ningún sistema de archivos agradece.
+  const entero = [limpio(cot.cliente), limpio(cot.proyecto)].filter(Boolean).join(' · ')
+  // Si hay que recortar, se recorta por un espacio: un nombre cortado a mitad de
+  // palabra parece un archivo estropeado, no un archivo largo.
+  const dequien =
+    entero.length <= 70
+      ? entero
+      : entero.slice(0, 70).replace(/[^\s]*$/, '').trim() || entero.slice(0, 70).trim()
+
+  const nombre = [dequien, limpio(cot.folio)].filter(Boolean).join(' · ')
+  return `${nombre || 'Cotizacion'}.pdf`
 }
 
 /**

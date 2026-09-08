@@ -358,9 +358,11 @@ export default function App() {
             </h1>
             <p>
               {cotizacionAbierta
-                ? `${cotizacionAbierta.folio} · ${
-                    cotizacionAbierta.marca === 'diabolical' ? 'con marca DIABOLICAL' : 'como particular'
-                  }`
+                ? [
+                    cotizacionAbierta.cliente || cotizacionAbierta.proyecto || 'Sin cliente',
+                    cotizacionAbierta.folio,
+                    cotizacionAbierta.marca === 'diabolical' ? 'con marca DIABOLICAL' : 'como particular',
+                  ].join(' · ')
                 : proyectoAbierto
                   ? proyectoAbierto.tipo === 'interno'
                     ? 'Sin cliente: lo lanzamos nosotros'
