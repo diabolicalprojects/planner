@@ -28,6 +28,15 @@ export function sesionRenovada() {
   caducada = false
 }
 
+// El servidor ha contestado 503: está vivo, pero sin contraseña configurada no
+// sirve nada. No es lo mismo que no haber entrado, y no se puede arreglar desde
+// aquí: hay que tocar una variable de entorno.
+let sinConfigurar = false
+
+export function servidorSinClave() {
+  return sinConfigurar
+}
+
 /**
  * Pregunta una sola vez si hay servidor detrás. No basta con que la respuesta
  * sea 200: el servidor de desarrollo de Vite devuelve el index.html para
@@ -68,6 +77,10 @@ function ordenar(datos) {
 export async function cargar() {
   if ((await detectarModo()) === 'api') {
     const res = await fetch('/api/datos')
+    if (res.status === 503) {
+      sinConfigurar = true
+      throw new Error('El servidor no tiene contraseña configurada.')
+    }
     if (res.status === 401) {
       caducada = true
       throw new Error('Hay que entrar antes de leer nada.')

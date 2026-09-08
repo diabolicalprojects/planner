@@ -36,6 +36,10 @@ Vista principal: tablero por estado tipo Kanban con las columnas Idea · En curs
   su fecha clave es el lanzamiento y su importe es inversión, no ingreso.
 - La caja (presupuestado, cobrado, pendiente) cuenta SÓLO proyectos de cliente. La inversión
   en producto propio se suma aparte: mezclarlas mentiría sobre lo que hay por cobrar.
+- **El cobro es una lista, no un sí/no.** Un proyecto se cobra por partes —«50% de anticipo y
+  50% contra entrega» lo dicen las propias cotizaciones—, así que cada cobro se apunta con su
+  importe y su fecha. Lo cobrado se suma de ahí y no se guarda aparte. El modelo viejo, que era
+  binario, se convierte solo: un `cobrado: true` pasa a ser un cobro por el importe completo.
 - Campos por proyecto: nombre, cliente, estado, fecha de inicio, fecha de entrega; presupuesto e indicador de cobrado/pendiente; lista de tareas con check y progreso calculado; notas libres, enlace (web/repo) y etiquetas.
 - Módulo de cotizaciones: documento con folio versionado, alcance por componentes con sus
   entregables, inversión en pesos con IVA opcional, notas destacadas y condiciones. Se emite
@@ -48,6 +52,9 @@ Vista principal: tablero por estado tipo Kanban con las columnas Idea · En curs
 - Las tareas de un proyecto se ordenan a mano: el orden de la lista es el orden de prioridad.
 - Cada tarea puede tener una persona responsable (texto libre con autocompletado; no existe
   una entidad «equipo» en el producto).
+- Una cotización aprobada **se convierte en proyecto** con un botón: se lleva el cliente, el
+  importe total y cada componente del alcance como tarea, en el mismo orden. Queda enlazada, así
+  que no se puede convertir dos veces y contar el dinero por duplicado.
 - Filtrado y búsqueda por cliente, etiqueta, responsable y texto.
 - Totales agregados de cartera (presupuestado, cobrado, pendiente) visibles sin entrar a ningún proyecto.
 - Exportar e importar toda la base como archivo `.json`.

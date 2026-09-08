@@ -37,6 +37,15 @@ CREATE TABLE IF NOT EXISTS tareas (
   orden       INTEGER NOT NULL DEFAULT 0
 );
 
+-- Los cobros de un proyecto. Se leen y escriben siempre con la ficha entera, y
+-- son cuatro campos: darles tabla propia añadiría un join sin ganar nada.
+--
+-- `cobrado` se queda, pero pasa a ser un valor derivado que escribe el servidor:
+-- vale para mirar la tabla a pelo, y la verdad está en `pagos`. El modelo viejo
+-- era un sí/no, y con eso un proyecto con la mitad anticipada salía como
+-- pendiente entero; la conversión la hace la aplicación al leer.
+ALTER TABLE proyectos ADD COLUMN IF NOT EXISTS pagos JSONB NOT NULL DEFAULT '[]';
+
 CREATE INDEX IF NOT EXISTS tareas_por_proyecto ON tareas (proyecto_id, orden);
 CREATE INDEX IF NOT EXISTS proyectos_por_estado ON proyectos (estado);
 CREATE INDEX IF NOT EXISTS proyectos_por_entrega ON proyectos (entrega);

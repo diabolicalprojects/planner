@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   ArrowLeft,
+  ArrowUpRight,
   Check,
   CopySimple,
   DotsSixVertical,
   DownloadSimple,
+  Kanban,
   Plus,
   TrashSimple,
   X,
@@ -26,7 +28,13 @@ const ALTO_A4 = 1123 // 297 mm a 96 ppp
 
 /** Editor de la cotización, con la hoja al lado actualizándose mientras escribes. */
 export default function Cotizacion({ cot, proyectos, acciones, volver }) {
-  const { actualizarCotizacion, borrarCotizacion, duplicarCotizacion } = acciones
+  const {
+    actualizarCotizacion,
+    borrarCotizacion,
+    duplicarCotizacion,
+    convertirEnProyecto,
+    verProyecto,
+  } = acciones
   const [confirmando, setConfirmando] = useState(false)
   const [escala, setEscala] = useState(0.5)
   // 'quieto' | 'generando' | 'listo' | 'falla'
@@ -87,6 +95,9 @@ export default function Cotizacion({ cot, proyectos, acciones, volver }) {
 
   const cambiar = (cambios) => actualizarCotizacion(cot.id, cambios)
   const t = totalesCotizacion(cot)
+  // Si ya se convirtió, el botón deja de crear y pasa a llevarte allí: dos
+  // proyectos de la misma cotización sería contar el dinero dos veces.
+  const yaEsProyecto = proyectos.find((p) => p.id === cot.proyectoId)
 
   /**
    * El PDF se arma aquí mismo, en el navegador: sale vectorial, con el texto
@@ -519,6 +530,18 @@ export default function Cotizacion({ cot, proyectos, acciones, volver }) {
                   {rotuloEstadoCot(cot.estado).toLowerCase()} · {pesos(t.total)} MXN
                 </span>
                 <span style={{ display: 'flex', gap: 'var(--e2)', marginLeft: 'auto', flexWrap: 'wrap' }}>
+                  {yaEsProyecto ? (
+                    <Boton onClick={() => verProyecto(yaEsProyecto.id)}>
+                      <ArrowUpRight size={15} weight="bold" /> Ver el proyecto
+                    </Boton>
+                  ) : (
+                    <Boton
+                      variante={cot.estado === 'aprobada' ? 'principal' : 'suave'}
+                      onClick={() => convertirEnProyecto(cot)}
+                    >
+                      <Kanban size={15} weight="bold" /> Convertir en proyecto
+                    </Boton>
+                  )}
                   <Boton onClick={() => duplicarCotizacion(cot)}>
                     <CopySimple size={15} /> Nueva versión
                   </Boton>

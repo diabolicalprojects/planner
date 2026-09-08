@@ -67,7 +67,9 @@ export function proyectoEnBlanco() {
     inicio: hoyISO(),
     entrega: '',
     presupuesto: 0,
-    cobrado: false,
+    // Los cobros, uno a uno. Un proyecto no se cobra de golpe: se cobra un
+    // anticipo y luego el resto, que es lo que dicen las propias cotizaciones.
+    pagos: [],
     notas: '',
     enlace: '',
     etiquetas: [],
@@ -77,14 +79,46 @@ export function proyectoEnBlanco() {
   }
 }
 
-/** Normaliza cualquier ficha (venga de un JSON importado o de una versión previa). */
+/**
+ * Un cobro suelto. La fecha importa: sirve para saber cuándo entró el dinero,
+ * no sólo cuánto.
+ */
+function sanearPago(bruto) {
+  const importe = Number(bruto?.importe)
+  return {
+    id: typeof bruto?.id === 'string' && bruto.id ? bruto.id : nuevoId(),
+    importe: Number.isFinite(importe) && importe > 0 ? Math.trunc(importe) : 0,
+    fecha: fechaValida(bruto?.fecha) ? bruto.fecha : '',
+    nota: String(bruto?.nota ?? '').slice(0, 120),
+  }
+}
+
+/**
+ * Normaliza cualquier ficha (venga de un JSON importado o de una versión previa).
+ *
+ * Aquí vive la conversión del modelo viejo: antes el cobro era un sí/no, y con
+ * eso un proyecto con la mitad anticipada aparecía como pendiente entero. Un
+ * `cobrado: true` de entonces se convierte en un cobro por el importe completo,
+ * que es exactamente lo que aquel dato quería decir.
+ */
 export function sanear(bruto) {
   const base = proyectoEnBlanco()
   if (!bruto || typeof bruto !== 'object') return base
   const numero = Number(bruto.presupuesto)
+  const presupuesto = Number.isFinite(numero) && numero >= 0 ? numero : 0
+  // `cobrado` ya no viaja en la ficha: se calcula. Se saca del reparto para que
+  // no vuelva a colarse un valor viejo por la puerta de atrás.
+  const { cobrado: heredado, ...resto } = bruto
+  const pagos = Array.isArray(bruto.pagos)
+    ? bruto.pagos.slice(0, 60).map(sanearPago).filter((x) => x.importe > 0)
+    : heredado && presupuesto > 0
+      ? [{ id: nuevoId(), importe: presupuesto, fecha: '', nota: 'Registrado antes del desglose' }]
+      : []
+
   return {
     ...base,
-    ...bruto,
+    ...resto,
+    pagos,
     id: typeof bruto.id === 'string' && bruto.id ? bruto.id : base.id,
     nombre: String(bruto.nombre ?? '').slice(0, 120),
     tipo: TIPO_IDS.includes(bruto.tipo) ? bruto.tipo : 'cliente',
@@ -92,8 +126,7 @@ export function sanear(bruto) {
     estado: ESTADO_IDS.includes(bruto.estado) ? bruto.estado : 'idea',
     inicio: fechaValida(bruto.inicio) ? bruto.inicio : '',
     entrega: fechaValida(bruto.entrega) ? bruto.entrega : '',
-    presupuesto: Number.isFinite(numero) && numero >= 0 ? numero : 0,
-    cobrado: Boolean(bruto.cobrado),
+    presupuesto,
     notas: String(bruto.notas ?? ''),
     enlace: String(bruto.enlace ?? ''),
     etiquetas: Array.isArray(bruto.etiquetas)
@@ -108,6 +141,24 @@ export function sanear(bruto) {
         }))
       : [],
   }
+}
+
+/* --- Dinero cobrado --------------------------------------------------------
+   Tres funciones y ninguna cifra guardada: lo cobrado se suma de los cobros, no
+   se apunta aparte. Dos sitios donde vive el mismo número es como acaba uno
+   diciendo que le deben algo que ya le pagaron. */
+
+export function cobradoDe(proyecto) {
+  return (proyecto?.pagos ?? []).reduce((s, x) => s + (x.importe || 0), 0)
+}
+
+export function porCobrarDe(proyecto) {
+  return Math.max(0, (proyecto?.presupuesto || 0) - cobradoDe(proyecto))
+}
+
+/** Cobrado del todo. Un proyecto sin presupuesto no cuenta como cobrado. */
+export function estaCobrado(proyecto) {
+  return (proyecto?.presupuesto || 0) > 0 && porCobrarDe(proyecto) === 0
 }
 
 /** Iniciales para el disco del responsable: una o dos, nunca más. */
@@ -225,10 +276,13 @@ export function totales(proyectos) {
   const vivos = proyectos.filter((p) => p.estado !== 'entregado')
 
   const presupuestado = deCliente.reduce((s, p) => s + p.presupuesto, 0)
-  const cobrado = deCliente.filter((p) => p.cobrado).reduce((s, p) => s + p.presupuesto, 0)
+  const cobrado = deCliente.reduce((s, p) => s + cobradoDe(p), 0)
+  // Lo que falta se suma proyecto a proyecto: si en uno cobraste de más, ese
+  // sobrante no tapa lo que te deben en otro.
+  const pendiente = deCliente.reduce((s, p) => s + porCobrarDe(p), 0)
   const entregadoSinCobrar = deCliente
-    .filter((p) => p.estado === 'entregado' && !p.cobrado)
-    .reduce((s, p) => s + p.presupuesto, 0)
+    .filter((p) => p.estado === 'entregado')
+    .reduce((s, p) => s + porCobrarDe(p), 0)
 
   const venceEstaSemana = proyectos.filter((p) => {
     const d = diasHasta(p.entrega)
@@ -240,7 +294,7 @@ export function totales(proyectos) {
   return {
     presupuestado,
     cobrado,
-    pendiente: presupuestado - cobrado,
+    pendiente,
     entregadoSinCobrar,
     proyectosDeCliente: deCliente.length,
     inversion: internos.reduce((s, p) => s + p.presupuesto, 0),

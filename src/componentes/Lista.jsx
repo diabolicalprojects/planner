@@ -1,13 +1,22 @@
 import { useState } from 'react'
 import { ArrowDown, ArrowUp, RocketLaunch } from '@phosphor-icons/react'
 import { Chip, Tarjeta } from './base.jsx'
-import { esInterno, fechaCorta, pesos, rotuloEstado, vencido } from '../lib/modelo.js'
+import {
+  cobradoDe,
+  esInterno,
+  estaCobrado,
+  fechaCorta,
+  pesos,
+  porCobrarDe,
+  rotuloEstado,
+  vencido,
+} from '../lib/modelo.js'
 
 const COLUMNAS = [
   { id: 'nombre', rotulo: 'Proyecto' },
   { id: 'estado', rotulo: 'Estado', movil: false },
   { id: 'entrega', rotulo: 'Fecha', movil: false },
-  { id: 'cobro', rotulo: 'Cobro', movil: false, orden: 'cobrado' },
+  { id: 'cobro', rotulo: 'Cobro', movil: false, orden: 'porCobrar' },
   { id: 'presupuesto', rotulo: 'Importe', derecha: true },
 ]
 
@@ -17,10 +26,15 @@ export default function Lista({ visibles, abrir }) {
 
   const ordenados = [...visibles].sort((a, b) => {
     const campo = orden.campo
+    // Lo que falta por cobrar no es un campo de la ficha: se calcula de los
+    // cobros, así que se ordena antes de mirar las propiedades.
+    if (campo === 'porCobrar') {
+      const [x, y] = [porCobrarDe(a), porCobrarDe(b)]
+      return orden.asc ? x - y : y - x
+    }
     let x = a[campo]
     let y = b[campo]
     if (campo === 'presupuesto') return orden.asc ? x - y : y - x
-    if (campo === 'cobrado') return orden.asc ? Number(x) - Number(y) : Number(y) - Number(x)
     x = String(x ?? '')
     y = String(y ?? '')
     // Los proyectos sin fecha se van siempre al final, no al principio.
@@ -108,8 +122,12 @@ export default function Lista({ visibles, abrir }) {
             {esInterno(proyecto) ? (
               <span className="apoyo">Inversión</span>
             ) : (
-              <Chip variante={proyecto.cobrado ? 'suave' : 'contorno'}>
-                {proyecto.cobrado ? 'Cobrado' : 'Pendiente'}
+              <Chip variante={estaCobrado(proyecto) ? 'suave' : 'contorno'}>
+                {estaCobrado(proyecto)
+                  ? 'Cobrado'
+                  : cobradoDe(proyecto) > 0
+                    ? `Faltan ${pesos(porCobrarDe(proyecto))}`
+                    : 'Pendiente'}
               </Chip>
             )}
           </span>

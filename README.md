@@ -42,6 +42,13 @@ los borra de un clic cuando metas los tuyos.
 - **Sirve desde el teléfono.** Navegación fija abajo, al alcance del pulgar; formularios en
   una columna; y el editor de cotizaciones partido en *Datos* y *Documento*, para no bajar
   cuatro mil píxeles de formulario antes de ver la hoja. No es el escritorio encogido.
+- **Los cobros se apuntan uno a uno.** Un proyecto no se cobra de golpe: entra el anticipo y
+  luego el resto. Cada cobro lleva importe y fecha, y la caja de la cartera suma de ahí. Antes
+  era una casilla de sí o no, y con eso un proyecto con la mitad ya en la cuenta salía como
+  pendiente entero.
+- **De cotización aprobada a proyecto, con un botón.** Se lleva el cliente, el importe y cada
+  componente del alcance como tarea. Antes había que volver a teclear a mano lo que ya estaba
+  escrito al lado.
 - **La caja sólo cuenta dinero de clientes.** Lo que gastas en producto propio va en su propia
   tarjeta, porque sumarlo mentiría sobre lo que tienes por cobrar.
 - **El resumen** de la derecha suma la cartera. Ninguna cifra va sola: cada total lleva la

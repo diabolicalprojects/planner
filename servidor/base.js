@@ -6,6 +6,8 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pg from 'pg'
 
+import { estaCobrado } from '../src/lib/modelo.js'
+
 const AQUI = dirname(fileURLToPath(import.meta.url))
 
 export const pool = new pg.Pool({
@@ -65,7 +67,9 @@ export async function leerProyectos() {
     inicio: aISO(f.inicio),
     entrega: aISO(f.entrega),
     presupuesto: f.presupuesto,
-    cobrado: f.cobrado,
+    // `cobrado` no sube: se calcula de los pagos. En la tabla se queda como
+    // valor derivado, para poder mirarla a pelo sin sumar JSON a mano.
+    pagos: f.pagos ?? [],
     notas: f.notas,
     enlace: f.enlace,
     etiquetas: f.etiquetas ?? [],
@@ -176,9 +180,9 @@ export async function escribirDatos({ proyectos, cotizaciones }) {
       await cliente.query(
         `INSERT INTO proyectos
            (id, nombre, tipo, cliente, estado, inicio, entrega, presupuesto,
-            cobrado, notas, enlace, etiquetas, creado, actualizado)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,
-                 COALESCE($13::timestamptz, now()), now())`,
+            pagos, cobrado, notas, enlace, etiquetas, creado, actualizado)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,
+                 COALESCE($14::timestamptz, now()), now())`,
         [
           p.id,
           p.nombre ?? '',
@@ -188,7 +192,8 @@ export async function escribirDatos({ proyectos, cotizaciones }) {
           p.inicio || null,
           p.entrega || null,
           Number.isFinite(Number(p.presupuesto)) ? Math.max(0, Math.trunc(p.presupuesto)) : 0,
-          Boolean(p.cobrado),
+          JSON.stringify(Array.isArray(p.pagos) ? p.pagos : []),
+          estaCobrado(p),
           p.notas ?? '',
           p.enlace ?? '',
           Array.isArray(p.etiquetas) ? p.etiquetas : [],

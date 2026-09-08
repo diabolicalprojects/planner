@@ -88,6 +88,22 @@
   animation: entrar-acceso 460ms var(--curva) 100ms backwards;
 }
 
+.acceso__paso {
+  margin: var(--e4) 0 0;
+  font-size: var(--t-peque);
+  line-height: 1.6;
+  color: var(--sobre-negro-suave);
+}
+
+.acceso__paso code {
+  padding: 2px 6px;
+  border-radius: var(--radio-xs);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--sobre-negro);
+  font-family: inherit;
+  font-weight: 700;
+}
+
 .acceso__bloque {
   display: flex;
   flex-direction: column;

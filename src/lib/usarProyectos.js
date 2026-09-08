@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { cargar, detectarModo, guardar, modoActual, sesionCaducada } from './almacen.js'
+import {
+  cargar,
+  detectarModo,
+  guardar,
+  modoActual,
+  servidorSinClave,
+  sesionCaducada,
+} from './almacen.js'
 import { cotizacionEnBlanco, nuevoId, proyectoEnBlanco, sanear, sanearCotizacion } from './modelo.js'
 import { proyectosDeEjemplo } from '../data/ejemplo.js'
 
@@ -16,6 +23,7 @@ export function usarProyectos({ activo = true } = {}) {
   const [guardadoEn, setGuardadoEn] = useState(null)
   const [falloAlGuardar, setFalloAlGuardar] = useState(false)
   const [caducada, setCaducada] = useState(false)
+  const [sinClave, setSinClave] = useState(false)
   const [reintento, setReintento] = useState(0)
   const listoParaGuardar = useRef(false)
 
@@ -39,6 +47,7 @@ export function usarProyectos({ activo = true } = {}) {
         setProyectos([])
         setCotizaciones([])
         setFalloAlGuardar(true)
+        setSinClave(servidorSinClave())
       } finally {
         if (!vivo) return
         setModo(cual)
@@ -94,7 +103,8 @@ export function usarProyectos({ activo = true } = {}) {
       ...original,
       id: nuevoId(),
       nombre: `${original.nombre} (copia)`,
-      cobrado: false,
+      // La copia nace sin cobrar: el dinero que entró fue del original.
+      pagos: [],
       creado: new Date().toISOString(),
       actualizado: new Date().toISOString(),
       tareas: original.tareas.map((t) => ({ ...t, id: nuevoId() })),
@@ -156,6 +166,37 @@ export function usarProyectos({ activo = true } = {}) {
       return [...lista.slice(0, pos + 1), copia, ...lista.slice(pos + 1)]
     })
     return copia
+  }, [])
+
+  /* --- Cobros ------------------------------------------------------------ */
+
+  const anadirPago = useCallback((id, { importe, fecha, nota }) => {
+    const cantidad = Math.trunc(Number(importe))
+    if (!Number.isFinite(cantidad) || cantidad <= 0) return
+    setProyectos((lista) =>
+      lista.map((p) =>
+        p.id === id
+          ? {
+              ...p,
+              pagos: [
+                ...p.pagos,
+                { id: nuevoId(), importe: cantidad, fecha: fecha || '', nota: (nota ?? '').slice(0, 120) },
+              ],
+              actualizado: new Date().toISOString(),
+            }
+          : p,
+      ),
+    )
+  }, [])
+
+  const borrarPago = useCallback((id, pagoId) => {
+    setProyectos((lista) =>
+      lista.map((p) =>
+        p.id === id
+          ? { ...p, pagos: p.pagos.filter((x) => x.id !== pagoId), actualizado: new Date().toISOString() }
+          : p,
+      ),
+    )
   }, [])
 
   const anadirTarea = useCallback((id, texto) => {
@@ -220,12 +261,15 @@ export function usarProyectos({ activo = true } = {}) {
     guardadoEn,
     falloAlGuardar,
     caducada,
+    sinClave,
     reintentarGuardado,
     crear,
     actualizar,
     borrar,
     duplicar,
     reemplazar,
+    anadirPago,
+    borrarPago,
     anadirTarea,
     cambiarTarea,
     moverTarea,

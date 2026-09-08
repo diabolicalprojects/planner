@@ -897,20 +897,87 @@
   pointer-events: none;
 }
 
+/* --- Cobros ------------------------------------------------------------------
+   Era una casilla de sí o no. Ahora es una lista, porque un proyecto se cobra
+   en dos veces: el anticipo y el resto. El bloque hundido a radio 18 es el
+   mismo material que las tareas: son las dos listas que viven dentro de la
+   ficha. */
+
+.cobros {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e3);
+  padding: var(--e4);
+  border-radius: var(--radio-m);
+  background: var(--hundido);
+}
+
+.cobros__resumen {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--e3);
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+.cobros__resumen b {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.cobros__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .cobro {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--e2);
-  min-height: 42px;
-  padding: 0 14px;
-  border: 1px solid var(--linea);
+  gap: var(--e3);
+  min-height: 38px;
+  padding: 0 var(--e3);
   border-radius: var(--radio-s);
   background: var(--tarjeta);
 }
 
-.cobro--hecho {
-  border-color: var(--negro);
+.cobro__importe {
+  font-weight: 700;
+}
+
+.cobro__fecha {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cobros__acciones {
+  display: flex;
+  gap: var(--e2);
+  flex-wrap: wrap;
+}
+
+.cobros__alta {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  flex-wrap: wrap;
+}
+
+.cobros__alta .campo-dinero {
+  flex: 1 1 130px;
+  min-width: 0;
+}
+
+.cobros__alta input[type='date'] {
+  flex: 1 1 140px;
+  min-width: 0;
 }
 
 /* Nota que explica qué es un producto propio, dentro del detalle. */

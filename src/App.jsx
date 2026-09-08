@@ -16,12 +16,13 @@ import Cotizacion from './componentes/Cotizacion.jsx'
 import Cotizaciones from './componentes/Cotizaciones.jsx'
 import Detalle from './componentes/Detalle.jsx'
 import Lateral from './componentes/Lateral.jsx'
+import SinClave from './componentes/SinClave.jsx'
 import Lista from './componentes/Lista.jsx'
 import Resumen from './componentes/Resumen.jsx'
 import Tablero from './componentes/Tablero.jsx'
 import { Boton, Tarjeta } from './componentes/base.jsx'
 import { exportar, importar } from './lib/almacen.js'
-import { responsables } from './lib/modelo.js'
+import { nuevoId, responsables, totalesCotizacion } from './lib/modelo.js'
 import { estadoSesion, salir } from './lib/sesion.js'
 import { sesionRenovada } from './lib/almacen.js'
 import { usarProyectos } from './lib/usarProyectos.js'
@@ -231,6 +232,51 @@ export default function App() {
     [pila],
   )
 
+  /**
+   * De cotización aprobada a proyecto en marcha.
+   *
+   * Era el hueco más grande del flujo: cotizas, te aprueban, y arrancabas
+   * volviendo a teclear a mano el cliente, el importe y el alcance que ya
+   * estaban escritos al lado. Cada componente del alcance entra como tarea, en
+   * el mismo orden en que lo cotizaste.
+   *
+   * El importe que viaja es el total, IVA incluido si lo hay: los cobros que se
+   * apunten después son dinero que entra de verdad, y ese llega con su IVA.
+   */
+  /** Ir a un proyecto desde fuera del tablero: hay que cambiar de vista también. */
+  const verProyecto = useCallback((id) => {
+    setCotAbierta(null)
+    setVista('tablero')
+    setAbierto(id)
+  }, [])
+
+  const convertirEnProyecto = useCallback(
+    (cot) => {
+      const t = totalesCotizacion(cot)
+      const nuevo = pila.crear({
+        nombre: cot.proyecto || cot.cliente || 'Proyecto sin nombre',
+        cliente: cot.cliente,
+        tipo: 'cliente',
+        estado: 'idea',
+        presupuesto: t.total,
+        notas: cot.notas,
+        tareas: cot.componentes.map((c) => ({
+          id: nuevoId(),
+          texto: c.titulo || 'Componente sin título',
+          hecha: false,
+          responsable: '',
+        })),
+      })
+      // Queda enlazada: así se sabe de dónde salió y no se convierte dos veces.
+      pila.actualizarCotizacion(cot.id, { proyectoId: nuevo.id })
+      setCotAbierta(null)
+      setVista('tablero')
+      setAbierto(nuevo.id)
+      setMensaje({ tono: 'bien', texto: `Proyecto creado desde ${cot.folio}.` })
+    },
+    [pila],
+  )
+
   const hayEjemplo = proyectos.some((p) => p.id.startsWith('MUESTRA'))
   const filtrado = Boolean(busqueda || etiquetaActiva || tipoFiltro)
   const exportarTodo = useCallback(() => {
@@ -264,6 +310,9 @@ export default function App() {
   if (!dentro) {
     return <Acceso alEntrar={() => setSesion({ ...sesion, dentro: true })} />
   }
+
+  // Servidor vivo y sin contraseña: no sirve datos, y hay que decir por qué.
+  if (pila.sinClave) return <SinClave />
 
   return (
     <div className="marco">
@@ -517,7 +566,12 @@ export default function App() {
                 <Cotizacion
                   cot={cotizacionAbierta}
                   proyectos={proyectos}
-                  acciones={{ ...pila, duplicarCotizacion: duplicarCot }}
+                  acciones={{
+                    ...pila,
+                    duplicarCotizacion: duplicarCot,
+                    convertirEnProyecto,
+                    verProyecto,
+                  }}
                   volver={() => setCotAbierta(null)}
                 />
               ) : (

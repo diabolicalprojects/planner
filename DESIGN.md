@@ -305,7 +305,12 @@ lee por una mirilla de tres, y en un teléfono eso hace el campo inservible.
 
 La barra de avance es la única visualización del producto y siempre acompaña a su cifra:
 nunca se muestra un porcentaje sin las tareas que lo producen, ni un total sin la desviación
-que lo explica.
+que lo explica. Aparece dos veces con el mismo dibujo y distinto contenido: las tareas hechas
+de un proyecto y el dinero ya cobrado de su presupuesto.
+
+Los **cobros** viven en un bloque hundido a radio 18, el mismo material que las tareas: son las
+dos listas que crecen dentro de una ficha. Encima, la cifra con su contexto —«$24,000 de
+$48,000 · faltan $24,000»—, porque un importe suelto no dice si vas bien o mal.
 
 ## Do's and Don'ts
 

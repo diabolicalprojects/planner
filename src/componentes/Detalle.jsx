@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ArrowLeft, ArrowSquareOut, CopySimple, RocketLaunch, TrashSimple } from '@phosphor-icons/react'
-import { Boton, Campo, CampoDinero, Casilla, Chip, Tarjeta } from './base.jsx'
+import { Boton, Campo, CampoDinero, Chip, Tarjeta } from './base.jsx'
+import Cobros from './Cobros.jsx'
 import Tareas from './Tareas.jsx'
 import {
   ESTADOS,
@@ -23,8 +24,17 @@ const ACTUALIZADA = new Intl.DateTimeFormat('es-MX', { day: '2-digit', month: 's
  * vivos y lo que escribes ya está guardado.
  */
 export default function Detalle({ proyecto, acciones, volver, gente = [] }) {
-  const { actualizar, borrar, duplicar, anadirTarea, cambiarTarea, moverTarea, borrarTarea } =
-    acciones
+  const {
+    actualizar,
+    borrar,
+    duplicar,
+    anadirPago,
+    borrarPago,
+    anadirTarea,
+    cambiarTarea,
+    moverTarea,
+    borrarTarea,
+  } = acciones
   const [confirmando, setConfirmando] = useState(false)
   const [tareaNueva, setTareaNueva] = useState('')
   const [etiquetasTexto, setEtiquetasTexto] = useState(proyecto.etiquetas.join(', '))
@@ -192,7 +202,7 @@ export default function Detalle({ proyecto, acciones, volver, gente = [] }) {
               pista="Pesos mexicanos. Es gasto propio, no cuenta como ingreso."
             />
           ) : (
-            <div className="detalle__par">
+            <>
               <CampoDinero
                 id="campo-presupuesto"
                 etiqueta={rotuloImporte(proyecto.tipo)}
@@ -200,18 +210,8 @@ export default function Detalle({ proyecto, acciones, volver, gente = [] }) {
                 onChange={(e) => actualizar(proyecto.id, { presupuesto: Number(e.target.value) })}
                 pista="Pesos mexicanos"
               />
-              <div className="bloque-campo">
-                <span className="etiqueta-campo">Cobro</span>
-                <div className={`cobro ${proyecto.cobrado ? 'cobro--hecho' : ''}`.trim()}>
-                  <Casilla
-                    checked={proyecto.cobrado}
-                    onChange={(e) => actualizar(proyecto.id, { cobrado: e.target.checked })}
-                    etiqueta={proyecto.cobrado ? 'Cobrado' : 'Pendiente'}
-                  />
-                  <span className="apoyo cifra">{pesos(proyecto.presupuesto)}</span>
-                </div>
-              </div>
-            </div>
+              <Cobros proyecto={proyecto} anadirPago={anadirPago} borrarPago={borrarPago} />
+            </>
           )}
 
           <Campo

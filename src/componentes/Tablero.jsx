@@ -9,6 +9,7 @@ import {
   esInterno,
   fechaCorta,
   pesos,
+  porCobrarDe,
   rotuloEstado,
   vencido,
 } from '../lib/modelo.js'
@@ -192,7 +193,7 @@ function ContenidoProyecto({ proyecto }) {
   const tarde = vencido(proyecto)
   const interno = esInterno(proyecto)
   // Un producto propio no se cobra: enseñar "sin cobrar" ahí sería ruido.
-  const porCobrar = !interno && proyecto.estado === 'entregado' && !proyecto.cobrado
+  const porCobrar = !interno && proyecto.estado === 'entregado' && porCobrarDe(proyecto) > 0
 
   return (
     <>
