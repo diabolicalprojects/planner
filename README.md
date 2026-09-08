@@ -103,7 +103,7 @@ Se despliega en Dokploy desde este repositorio con el `Dockerfile` de dos etapas
 | --- | --- |
 | `DATABASE_URL` | Conexión a Postgres. En Dokploy el host es el `appName` del servicio de base de datos. |
 | `CLAVE_HASH` | **Obligatoria.** El hash de la contraseña de acceso. Sin ella la API no sirve nada. |
-| `SECRETO_SESION` | Con qué se firman las sesiones. Sin ella se inventa una al arrancar y cada despliegue echa a todo el mundo. |
+| `SECRETO_SESION` | Con qué se firman las sesiones. **Vale tanto como la contraseña**: quien la tenga puede fabricarse un vale de entrada válido. Sin ella se inventa una al arrancar y cada despliegue echa a todo el mundo. |
 | `PORT` | Puerto dentro del contenedor. Por defecto 3000. |
 | `SEMBRAR` | A `1` siembra proyectos, **sólo si la base está completamente vacía**. Nunca pisa datos. |
 | `SEMILLA_JSON` | Opcional. Un JSON exportado desde la app, para sembrar datos propios sin escribirlos en el repositorio. |

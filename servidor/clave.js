@@ -178,9 +178,15 @@ CLAVE_HASH=${hash}
 
 SECRETO_SESION=${secreto}
 
-La segunda es con lo que se firman las sesiones: sin ella el servidor se inventa
-una al arrancar y cada despliegue echa a todo el mundo.
+Las dos son secretas, y por motivos distintos:
 
-Del hash no se saca la contraseña: esas dos líneas se pueden pegar en un chat.
-La contraseña, no. Guárdala donde guardes las demás.
+  · CLAVE_HASH no deja sacar la contraseña, pero sí probarla a máquina, así que
+    tampoco conviene pasearlo.
+  · SECRETO_SESION es con lo que se firman las sesiones. Quien la tenga puede
+    fabricarse un vale de entrada válido y saltarse la contraseña entera: vale
+    tanto como la contraseña misma. Sin ella, además, el servidor se inventa una
+    al arrancar y cada despliegue echa a todo el mundo.
+
+Van del portapapeles a las variables de entorno y a ningún otro sitio: ni a un
+chat, ni a un archivo, ni al repositorio.
 `)
