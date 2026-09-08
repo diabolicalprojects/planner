@@ -1,29 +1,50 @@
 // Genera el hash de la contraseña de acceso.
 //
-//   npm run clave
+//   npm run clave          (o: node servidor/clave.js)
 //
 // La contraseña se teclea aquí y no sale de esta máquina: no viaja por los
-// argumentos (que quedan en el historial del intérprete y en la lista de
-// procesos) ni se escribe en ningún archivo. Lo único que se copia a Dokploy es
+// argumentos —que quedan en el historial del intérprete y en la lista de
+// procesos— ni se escribe en ningún archivo. Lo único que se copia a Dokploy es
 // el hash, que no sirve para entrar.
+
+import { createInterface } from 'node:readline'
+import { randomBytes } from 'node:crypto'
 
 import { hashClave } from './sesion.js'
 
-function leerOculto(pregunta) {
-  return new Promise((resolver, rechazar) => {
+/*
+ * Leer una contraseña por consola es más frágil de lo que parece, y en Windows
+ * más. Hay dos mundos:
+ *
+ *  · Consola de verdad (PowerShell, cmd): `isTTY` es cierto y se puede pedir el
+ *    modo crudo, que es lo que permite leer tecla a tecla sin pintar nada.
+ *
+ *  · Todo lo demás (Git Bash, y `npm run` según cómo herede la entrada): `isTTY`
+ *    llega sin definir aunque haya una persona delante tecleando. La primera
+ *    versión de este archivo tomaba eso por «me están pasando datos por una
+ *    tubería» y esperaba un fin de fichero que nunca llegaba: ni prompt, ni eco,
+ *    ni forma de escribir. Parecía colgado y en realidad estaba escuchando.
+ *    Aquí se lee por líneas, que es lo que sí llega. A cambio no se puede
+ *    ocultar el texto, y eso se avisa antes en vez de dejar creer que lo está.
+ */
+const HAY_CONSOLA = (() => {
+  if (process.stdin.isTTY !== true) return false
+  // No basta con que lo diga: hay entornos que se declaran consola y luego
+  // rechazan el modo crudo. Se prueba de verdad, que sale gratis.
+  try {
+    process.stdin.setRawMode(true)
+    process.stdin.setRawMode(false)
+    return true
+  } catch {
+    return false
+  }
+})()
+
+/** Consola de verdad: modo crudo, tecla a tecla, sin pintar lo tecleado. */
+function preguntarOculto(rotulo) {
+  return new Promise((resolver) => {
     const entrada = process.stdin
-
-    // Sin terminal (una tubería, un contenedor) se lee tal cual llegue.
-    if (!entrada.isTTY) {
-      let texto = ''
-      entrada.setEncoding('utf8')
-      entrada.on('data', (t) => (texto += t))
-      entrada.on('end', () => resolver(texto.replace(/\r?\n$/, '')))
-      entrada.on('error', rechazar)
-      return
-    }
-
-    process.stdout.write(pregunta)
+    process.stdout.write(rotulo)
     entrada.setRawMode(true)
     entrada.resume()
     entrada.setEncoding('utf8')
@@ -42,7 +63,7 @@ function leerOculto(pregunta) {
         entrada.pause()
         entrada.removeListener('data', alTeclear)
         process.stdout.write('\n')
-        resolver(clave)
+        resolver(clave.trim())
         return
       }
       if (tecla === '\u007f' || tecla === '\b') {
@@ -56,33 +77,91 @@ function leerOculto(pregunta) {
   })
 }
 
-const clave = await leerOculto('Contraseña de acceso: ')
+/*
+ * Lo demás: una sola consola de líneas para las dos preguntas —abrir una segunda
+ * sobre la misma entrada la deja muda— y una cola por delante.
+ *
+ * La cola no sobra: cuando la entrada viene por una tubería, las dos líneas
+ * llegan de golpe y `readline` las anuncia antes de que la segunda pregunta haya
+ * tenido tiempo de escuchar. Sin cola, la segunda respuesta se pierde en el aire
+ * y el programa se queda esperando algo que ya pasó.
+ */
+const lineas = HAY_CONSOLA
+  ? null
+  : createInterface({ input: process.stdin, output: process.stdout, terminal: false })
+
+const dichas = []
+const esperando = []
+let cerrada = false
+
+lineas?.on('line', (texto) => {
+  const siguiente = esperando.shift()
+  if (siguiente) siguiente(texto.trim())
+  else dichas.push(texto.trim())
+})
+
+lineas?.on('close', () => {
+  cerrada = true
+  // Lo que quedara esperando ya no va a llegar nunca.
+  while (esperando.length) esperando.shift()('')
+})
+
+function preguntarVisible(rotulo) {
+  process.stdout.write(rotulo)
+  if (dichas.length) {
+    const texto = dichas.shift()
+    process.stdout.write(`${texto}
+`)
+    return Promise.resolve(texto)
+  }
+  if (cerrada) return Promise.resolve('')
+  return new Promise((resolver) => esperando.push(resolver))
+}
+
+const preguntar = HAY_CONSOLA ? preguntarOculto : preguntarVisible
+
+if (!HAY_CONSOLA) {
+  console.log(
+    '\nEsta terminal no deja ocultar lo que escribes: la contraseña se verá en\n' +
+      'pantalla mientras la tecleas. Si prefieres que no se vea, cierra esto y\n' +
+      'ejecútalo en PowerShell:  node servidor/clave.js\n',
+  )
+}
+
+function abortar(motivo) {
+  console.error(`\n${motivo}\n`)
+  lineas?.close()
+  process.exit(1)
+}
+
+const clave = await preguntar('Contraseña de acceso: ')
 
 if (clave.length < 12) {
-  console.error(
-    '\nDemasiado corta. Doce caracteres es el suelo: esta contraseña es lo único\n' +
-      'que separa tu cartera de clientes de Internet entero.\n',
+  abortar(
+    'Demasiado corta: hacen falta doce caracteres o más. Esta contraseña es lo\n' +
+      'único que separa tu cartera de clientes de Internet entero, así que una\n' +
+      'frase larga que puedas teclear de memoria vale más que ocho símbolos raros.',
   )
-  process.exit(1)
 }
 
-const confirmar = process.stdin.isTTY ? await leerOculto('Otra vez, para confirmar: ') : clave
-if (confirmar !== clave) {
-  console.error('\nNo coinciden. No se ha generado nada.\n')
-  process.exit(1)
-}
+const confirmacion = await preguntar('Otra vez, para confirmar: ')
+if (confirmacion !== clave) abortar('No coinciden. No se ha generado nada.')
 
 const hash = await hashClave(clave)
+const secreto = randomBytes(48).toString('base64')
+lineas?.close()
 
 console.log(`
-Listo. En Dokploy, en las variables de entorno de la aplicación:
+Listo. En Dokploy, en las variables de entorno de la aplicación, AÑADE estas dos
+líneas a las que ya haya. No borres DATABASE_URL.
 
 CLAVE_HASH=${hash}
 
-Y una más, para que las sesiones sobrevivan a los despliegues. Sin ella el
-servidor se inventa una al arrancar y cada redespliegue echa a todo el mundo:
+SECRETO_SESION=${secreto}
 
-SECRETO_SESION=${(await import('node:crypto')).randomBytes(48).toString('base64')}
+La segunda es con lo que se firman las sesiones: sin ella el servidor se inventa
+una al arrancar y cada despliegue echa a todo el mundo.
 
-El hash no sirve para entrar: guarda la contraseña donde guardes las demás.
+Del hash no se saca la contraseña: esas dos líneas se pueden pegar en un chat.
+La contraseña, no. Guárdala donde guardes las demás.
 `)

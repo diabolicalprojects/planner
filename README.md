@@ -119,8 +119,10 @@ de verdad quieres pisar lo que haya).
 npm run clave
 ```
 
-Pide la contraseña dos veces sin enseñarla, y escupe las dos líneas que hay que pegar en las
-variables de entorno de Dokploy. La contraseña no sale de tu máquina: no viaja por los
+Pide la contraseña dos veces y escupe las dos líneas que hay que pegar en las variables de
+entorno de Dokploy. En PowerShell o cmd no se ve lo que tecleas; en Git Bash sí, porque esa
+terminal no deja ocultarlo —el script lo avisa antes en vez de dejarte creer que está oculto—.
+Si te importa, ejecútalo en PowerShell: `node servidor/clave.js`. La contraseña no sale de tu máquina: no viaja por los
 argumentos —que quedan en el historial del intérprete y en la lista de procesos— ni se guarda
 en ningún archivo. Lo que se copia es el hash, que no sirve para entrar.
 
