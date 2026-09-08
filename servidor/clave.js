@@ -40,7 +40,17 @@ const HAY_CONSOLA = (() => {
   }
 })()
 
-/** Consola de verdad: modo crudo, tecla a tecla, sin pintar lo tecleado. */
+/**
+ * Consola de verdad: modo crudo, tecla a tecla.
+ *
+ * Por cada carácter se pinta un asterisco. No es adorno: sin ninguna señal en
+ * pantalla se escribe a ciegas, y en la confirmación basta bailar una tecla para
+ * que las dos no coincidan sin saber por qué. Un asterisco no dice nada de la
+ * contraseña y dice todo lo que hace falta: que la máquina te está oyendo.
+ *
+ * Asterisco y no un punto tipográfico: en una consola de Windows con la página
+ * de códigos antigua, el punto sale como un jeroglífico.
+ */
 function preguntarOculto(rotulo) {
   return new Promise((resolver) => {
     const entrada = process.stdin
@@ -50,27 +60,36 @@ function preguntarOculto(rotulo) {
     entrada.setEncoding('utf8')
 
     let clave = ''
-    const alTeclear = (tecla) => {
-      // Ctrl+C y Ctrl+D: salir sin dejar nada a medias.
-      if (tecla === '\u0003' || tecla === '\u0004') {
-        entrada.setRawMode(false)
-        entrada.pause()
-        process.stdout.write('\n')
-        process.exit(1)
+    const terminar = (codigo) => {
+      entrada.setRawMode(false)
+      entrada.pause()
+      entrada.removeListener('data', alTeclear)
+      process.stdout.write('\n')
+      if (codigo !== undefined) process.exit(codigo)
+      resolver(clave.trim())
+    }
+
+    const alTeclear = (trozo) => {
+      // Flechas, inicio, fin y demás llegan como secuencias que empiezan por
+      // ESC. Si se dejaran pasar, sus letras acabarían dentro de la contraseña.
+      if (trozo.startsWith('\u001b')) return
+
+      for (const tecla of trozo) {
+        if (tecla === '\u0003' || tecla === '\u0004') return terminar(1)
+        if (tecla === '\r' || tecla === '\n') return terminar()
+        if (tecla === '\u007f' || tecla === '\b') {
+          if (clave.length) {
+            clave = clave.slice(0, -1)
+            // Retroceder, tapar el asterisco con un espacio, retroceder otra vez.
+            process.stdout.write('\b \b')
+          }
+          continue
+        }
+        // Cualquier otro carácter de control se ignora, no se cuela en la clave.
+        if (tecla < ' ') continue
+        clave += tecla
+        process.stdout.write('*')
       }
-      if (tecla === '\r' || tecla === '\n') {
-        entrada.setRawMode(false)
-        entrada.pause()
-        entrada.removeListener('data', alTeclear)
-        process.stdout.write('\n')
-        resolver(clave.trim())
-        return
-      }
-      if (tecla === '\u007f' || tecla === '\b') {
-        clave = clave.slice(0, -1)
-        return
-      }
-      clave += tecla
     }
 
     entrada.on('data', alTeclear)
